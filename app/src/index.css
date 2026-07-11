@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-content: system-ui, 'Noto Sans', 'Noto Sans Devanagari', 'Noto Naskh Arabic', sans-serif;
+
+  --color-page: #dfe4ee;
+  --color-surface: #f1f3f7;
+  --color-card: #ffffff;
+
+  --color-ink: #1e2a44;
+  --color-indigo: #3a4a9f;
+  --color-indigo-hover: #33418f;
+  --color-indigo-active: #2b3a7e;
+
+  --color-border: #d5dbea;
+  --color-border-soft: #e3e7f0;
+  --color-border-strong: #c2cbe2;
+
+  --color-muted: #6b7590;
+  --color-muted-2: #8891ab;
+  --color-muted-3: #a9b1c7;
+
+  --color-chip: #edf0fa;
+  --color-chip-border: #d8def2;
+
+  --color-success: #1f7a55;
+  --color-success-bg: #dcf2e5;
+  --color-success-border: #dcede3;
+
+  --color-danger: #c4423c;
+  --color-danger-bg: #fae3e1;
+  --color-danger-border: #f2d7d5;
+
+  --color-gold: #8a6210;
+  --color-gold-icon: #b07a18;
+  --color-gold-bg: #fbf0db;
+
+  --color-overlay: rgba(22, 30, 54, 0.44);
+  --color-toast: #232c49;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-page);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  touch-action: manipulation;
+  font-family: inherit;
+}
+
+input,
+textarea,
+select {
+  outline: none;
+  font-family: inherit;
+}
+
+a {
+  color: var(--color-indigo);
+}
+a:hover {
+  color: var(--color-indigo-active);
+}
+
+@keyframes sbRise {
+  from {
+    transform: translateY(22px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes sbFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sbPlace {
+  0% {
+    transform: scale(0.45) translateY(8px);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.08) translateY(-2px);
+    opacity: 1;
+  }
+  78% {
+    transform: scale(0.96) translateY(0);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes sbShake {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  15% {
+    transform: translateX(-7px) rotate(-1.4deg);
+  }
+  38% {
+    transform: translateX(6px) rotate(1.2deg);
+  }
+  62% {
+    transform: translateX(-4px) rotate(-0.8deg);
+  }
+  82% {
+    transform: translateX(2px) rotate(0.4deg);
+  }
+}
+@keyframes sbGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(31, 122, 85, 0.32);
+  }
+  100% {
+    box-shadow: 0 0 0 18px rgba(31, 122, 85, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
