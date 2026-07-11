@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#DFE4EE;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+button{touch-action:manipulation;font-family:inherit;}
+input,textarea,select{outline:none;font-family:inherit;}
+a{color:#3A4A9F;}a:hover{color:#2B3A7E;}
+@keyframes sbRise{from{transform:translateY(22px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes sbFade{from{opacity:0;}to{opacity:1;}}
+@keyframes sbPlace{0%{transform:scale(.45) translateY(8px);opacity:0;}55%{transform:scale(1.08) translateY(-2px);opacity:1;}78%{transform:scale(.96) translateY(0);}100%{transform:scale(1) translateY(0);}}
+@keyframes sbShake{0%,100%{transform:translateX(0) rotate(0deg);}15%{transform:translateX(-7px) rotate(-1.4deg);}38%{transform:translateX(6px) rotate(1.2deg);}62%{transform:translateX(-4px) rotate(-0.8deg);}82%{transform:translateX(2px) rotate(0.4deg);}}
+@keyframes sbGlow{0%{box-shadow:0 0 0 0 rgba(31,122,85,.32);}100%{box-shadow:0 0 0 18px rgba(31,122,85,0);}}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;animation-delay:0ms !important;transition-duration:.01ms !important;}}
+</style>
+</helmet>
+<div style="height:100dvh;max-width:480px;margin:0 auto;background:#F1F3F7;display:flex;flex-direction:column;overflow:hidden;position:relative;font-family:'Bricolage Grotesque',system-ui,sans-serif;color:#1E2A44;box-shadow:0 0 0 1px rgba(30,42,68,.07);">
+
+  <!-- ============ HOME ============ -->
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div data-screen-label="Home" style="display:flex;flex-direction:column;height:100%;">
+      <div style="padding:20px 18px 0;display:flex;align-items:center;gap:11px;">
+        <div style="width:37px;height:37px;background:#FFFFFF;border:1.5px solid #D5DBEA;border-bottom:4px solid #3A4A9F;border-radius:11px;display:flex;align-items:center;justify-content:center;font:600 17px/1 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#3A4A9F;flex:none;">S</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font:700 19px/1.15 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-0.01em;">Sentence Trainer</div>
+          <div style="font:500 12px/1.3 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:1px;">Rebuild sentences word by word</div>
+        </div>
+      </div>
+      <div style="padding:14px 18px 12px;display:flex;gap:10px;">
+        <button onClick="{{ onNewDeck }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 14px;border:none;border-radius:13px;background:#3A4A9F;color:#FFFFFF;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;" style-hover="background:#33418F;" style-active="transform:translateY(1px);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex:none;"><path d="M12 5.5 V18.5 M5.5 12 H18.5" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"></path></svg>
+          New deck
+        </button>
+        <button onClick="{{ onNewFolder }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 14px;border:1.5px solid #D5DBEA;border-radius:13px;background:#FFFFFF;color:#2B3A7E;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;" style-hover="background:#F7F9FD;" style-active="transform:translateY(1px);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex:none;"><path d="M3.5 7.2 a2 2 0 0 1 2 -2 h4.2 l2 2.4 h6.8 a2 2 0 0 1 2 2 V17 a2 2 0 0 1 -2 2 h-13 a2 2 0 0 1 -2 -2 z" stroke="#2B3A7E" stroke-width="1.8" stroke-linejoin="round"></path></svg>
+          New folder
+        </button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:2px 18px 36px;display:flex;flex-direction:column;gap:4px;">
+        <sc-for list="{{ foldersV }}" as="f" hint-placeholder-count="1">
+          <div style="margin-top:10px;">
+            <div style="display:flex;align-items:center;gap:2px;">
+              <button onClick="{{ f.onToggle }}" aria-expanded="{{ f.open }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:44px;background:none;border:none;padding:0 2px;cursor:pointer;color:#1E2A44;text-align:start;border-radius:10px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex:none;transition:transform .18s;transform:{{ f.chev }};"><path d="M9 5.5 L16 12 L9 18.5" stroke="#8891AB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <span style="font:700 15.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.name }}</span>
+                <span style="font:600 12.5px/1 'Bricolage Grotesque',system-ui,sans-serif;color:#8891AB;flex:none;">{{ f.count }}</span>
+              </button>
+              <button onClick="{{ f.onMenu }}" aria-label="Folder menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:13px;cursor:pointer;color:#6B7590;flex:none;padding:0;" style-active="background:#E7EAF3;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.4" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="12" cy="18.6" r="1.9"></circle></svg>
+              </button>
+            </div>
+            <sc-if value="{{ f.open }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:10px;padding-top:2px;">
+                <sc-for list="{{ f.decks }}" as="d" hint-placeholder-count="2">
+                  <div style="background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;padding:13px 8px 12px 16px;box-shadow:0 1px 2px rgba(30,42,68,.04);">
+                    <div style="display:flex;align-items:flex-start;gap:4px;">
+                      <button onClick="{{ d.onOpen }}" style="flex:1;min-width:0;min-height:44px;padding:3px 4px 0 0;background:none;border:none;cursor:pointer;text-align:start;color:#1E2A44;display:block;border-radius:10px;">
+                        <span style="display:block;font:600 16.5px/1.25 'Bricolage Grotesque',system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ d.name }}</span>
+                        <span style="display:block;font:500 12.5px/1.4 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:3px;">{{ d.countLine }}</span>
+                      </button>
+                      <button onClick="{{ d.onMenu }}" aria-label="Deck menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:13px;cursor:pointer;color:#6B7590;flex:none;padding:0;" style-active="background:#E7EAF3;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.4" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="12" cy="18.6" r="1.9"></circle></svg>
+                      </button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:9px;padding-right:8px;">
+                      <button onClick="{{ d.onPractice }}" disabled="{{ d.practiceDisabled }}" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:none;border-radius:12px;background:#3A4A9F;color:#FFFFFF;font:600 14px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;flex:none;opacity:{{ d.practiceOpacity }};" style-hover="background:#33418F;" style-active="transform:translateY(1px);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" style="flex:none;"><path d="M8 5.8v12.4c0 .8.9 1.3 1.6.9l9.6-6.2c.6-.4.6-1.4 0-1.8L9.6 4.9c-.7-.4-1.6.1-1.6.9z" fill="#FFFFFF"></path></svg>
+                        Practice
+                      </button>
+                      <span style="flex:1;"></span>
+                      <span style="font:500 12.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;flex:none;">Remaining only</span>
+                      <button role="switch" aria-checked="{{ d.swChecked }}" aria-label="Practice remaining cards only" onClick="{{ d.onToggleRemaining }}" style="width:52px;height:44px;background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;">
+                        <span style="width:46px;height:27px;border-radius:999px;display:block;position:relative;transition:background-color .18s;background:{{ d.swBg }};">
+                          <span style="position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(30,42,68,.35);transition:transform .18s;transform:{{ d.swX }};"></span>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ f.isEmpty }}" hint-placeholder-val="{{ false }}">
+                  <div style="font:500 13px/1.5 'Bricolage Grotesque',system-ui,sans-serif;color:#8891AB;padding:11px 13px;background:#EAEDF5;border-radius:12px;">No decks here yet — use a deck's menu to move one in.</div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{ hasUngrouped }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:12px;">
+            <div style="display:flex;align-items:center;min-height:38px;padding:0 2px;">
+              <span style="font:700 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#8891AB;">Ungrouped</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <sc-for list="{{ ungroupedV }}" as="d" hint-placeholder-count="1">
+                <div style="background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;padding:13px 8px 12px 16px;box-shadow:0 1px 2px rgba(30,42,68,.04);">
+                  <div style="display:flex;align-items:flex-start;gap:4px;">
+                    <button onClick="{{ d.onOpen }}" style="flex:1;min-width:0;min-height:44px;padding:3px 4px 0 0;background:none;border:none;cursor:pointer;text-align:start;color:#1E2A44;display:block;border-radius:10px;">
+                      <span style="display:block;font:600 16.5px/1.25 'Bricolage Grotesque',system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ d.name }}</span>
+                      <span style="display:block;font:500 12.5px/1.4 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:3px;">{{ d.countLine }}</span>
+                    </button>
+                    <button onClick="{{ d.onMenu }}" aria-label="Deck menu" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:13px;cursor:pointer;color:#6B7590;flex:none;padding:0;" style-active="background:#E7EAF3;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.4" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="12" cy="18.6" r="1.9"></circle></svg>
+                    </button>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:9px;padding-right:8px;">
+                    <button onClick="{{ d.onPractice }}" disabled="{{ d.practiceDisabled }}" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:none;border-radius:12px;background:#3A4A9F;color:#FFFFFF;font:600 14px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;flex:none;opacity:{{ d.practiceOpacity }};" style-hover="background:#33418F;" style-active="transform:translateY(1px);">
+                      <svg width="12" height="12" viewBox="0 0 24 24" style="flex:none;"><path d="M8 5.8v12.4c0 .8.9 1.3 1.6.9l9.6-6.2c.6-.4.6-1.4 0-1.8L9.6 4.9c-.7-.4-1.6.1-1.6.9z" fill="#FFFFFF"></path></svg>
+                      Practice
+                    </button>
+                    <span style="flex:1;"></span>
+                    <span style="font:500 12.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;flex:none;">Remaining only</span>
+                    <button role="switch" aria-checked="{{ d.swChecked }}" aria-label="Practice remaining cards only" onClick="{{ d.onToggleRemaining }}" style="width:52px;height:44px;background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;">
+                      <span style="width:46px;height:27px;border-radius:999px;display:block;position:relative;transition:background-color .18s;background:{{ d.swBg }};">
+                        <span style="position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(30,42,68,.35);transition:transform .18s;transform:{{ d.swX }};"></span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noDecks }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 10px 50px;">
+            <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap;">
+              <span style="display:inline-flex;align-items:center;min-height:42px;padding:8px 13px;border-radius:12px;border:1.5px solid #D5DBEA;border-bottom:4px solid #C2CBE2;background:#FFFFFF;color:#1E2A44;font:600 15px/1 'Bricolage Grotesque',system-ui,sans-serif;">Add</span>
+              <span style="display:inline-flex;align-items:center;min-height:42px;padding:8px 13px;border-radius:12px;border:1.5px solid #D5DBEA;border-bottom:4px solid #C2CBE2;background:#FFFFFF;color:#1E2A44;font:600 15px/1 'Bricolage Grotesque',system-ui,sans-serif;">your</span>
+              <span style="display:inline-flex;align-items:center;min-height:42px;padding:8px 13px;border-radius:12px;border:1.5px solid #33418F;border-bottom:4px solid #28346F;background:#3A4A9F;color:#FFFFFF;font:600 15px/1 'Bricolage Grotesque',system-ui,sans-serif;">first deck</span>
+            </div>
+            <div style="font:500 13.5px/1.6 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:18px;max-width:260px;">Store sentences in decks, then rebuild them word by word — like a puzzle.</div>
+            <button onClick="{{ onNewDeck }}" style="display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 22px;border:none;border-radius:13px;background:#3A4A9F;color:#FFFFFF;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;margin-top:18px;" style-hover="background:#33418F;" style-active="transform:translateY(1px);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex:none;"><path d="M12 5.5 V18.5 M5.5 12 H18.5" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"></path></svg>
+              New deck
+            </button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DECK ============ -->
+  <sc-if value="{{ isDeck }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Deck" style="display:flex;flex-direction:column;height:100%;">
+      <div style="display:flex;align-items:center;gap:6px;padding:10px 10px 4px;">
+        <button onClick="{{ onBackHome }}" aria-label="Back" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:13px;cursor:pointer;color:#1E2A44;flex:none;padding:0;" style-active="background:#E7EAF3;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M14.5 5.5 L8 12 L14.5 18.5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+        <div style="flex:1;min-width:0;">
+          <div style="font:700 17px/1.2 'Bricolage Grotesque',system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ deckName }}</div>
+          <div style="font:500 12px/1.3 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:1px;">{{ deckCountLine }}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;padding:8px 18px 12px;">
+        <button onClick="{{ onAddCard }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 14px;border:none;border-radius:13px;background:#3A4A9F;color:#FFFFFF;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;" style-hover="background:#33418F;" style-active="transform:translateY(1px);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex:none;"><path d="M12 5.5 V18.5 M5.5 12 H18.5" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"></path></svg>
+          Add card
+        </button>
+        <button onClick="{{ onBulkAdd }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:0 14px;border:1.5px solid #D5DBEA;border-radius:13px;background:#FFFFFF;color:#2B3A7E;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;" style-hover="background:#F7F9FD;" style-active="transform:translateY(1px);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex:none;"><path d="M5 7 H19 M5 12 H19 M5 17 H12.5" stroke="#2B3A7E" stroke-width="2" stroke-linecap="round"></path></svg>
+          Bulk add
+        </button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:2px 18px 36px;display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ deckCardsV }}" as="c" hint-placeholder-count="3">
+          <div style="background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;display:flex;align-items:stretch;box-shadow:0 1px 2px rgba(30,42,68,.04);">
+            <button onClick="{{ c.onOpen }}" style="flex:1;min-width:0;text-align:start;background:none;border:none;padding:13px 2px 13px 16px;cursor:pointer;color:#1E2A44;display:flex;flex-direction:column;gap:8px;align-items:flex-start;border-radius:16px 0 0 16px;" style-active="background:#F7F9FD;">
+              <span dir="auto" style="font:500 16px/1.55 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;width:100%;word-break:break-word;">{{ c.sentence }}</span>
+              <sc-if value="{{ c.mastered }}" hint-placeholder-val="{{ false }}">
+                <span style="display:inline-flex;align-items:center;gap:5px;background:#FBF0DB;color:#8A6210;font:700 11px/1 'Bricolage Grotesque',system-ui,sans-serif;padding:5px 9px;border-radius:999px;letter-spacing:.02em;">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style="flex:none;"><path d="M5 12.5 L10 17.5 L19 7" stroke="#B07A18" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  Mastered
+                </span>
+              </sc-if>
+            </button>
+            <button onClick="{{ c.onMenu }}" aria-label="Card menu" style="width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:13px;cursor:pointer;color:#6B7590;flex:none;padding:0;align-self:center;" style-active="background:#E7EAF3;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.4" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="12" cy="18.6" r="1.9"></circle></svg>
+            </button>
+          </div>
+        </sc-for>
+        <sc-if value="{{ deckIsEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:46px 20px;color:#6B7590;font:500 13.5px/1.65 'Bricolage Grotesque',system-ui,sans-serif;">No cards yet.<br>Add one above, or paste many at once with Bulk add.</div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ CARD EDITOR ============ -->
+  <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Card editor" style="display:flex;flex-direction:column;height:100%;">
+      <div style="display:flex;align-items:center;gap:6px;padding:10px 14px 4px 10px;">
+        <button onClick="{{ onEdBack }}" aria-label="Back" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:13px;cursor:pointer;color:#1E2A44;flex:none;padding:0;" style-active="background:#E7EAF3;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M14.5 5.5 L8 12 L14.5 18.5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+        <div style="flex:1;min-width:0;font:700 17px/1.2 'Bricolage Grotesque',system-ui,sans-serif;">{{ edTitle }}</div>
+        <button onClick="{{ onEdSave }}" disabled="{{ edSaveDisabled }}" style="display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 22px;border:none;border-radius:12px;background:#3A4A9F;color:#FFFFFF;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;flex:none;opacity:{{ edSaveOpacity }};" style-hover="background:#33418F;" style-active="transform:translateY(1px);">Save</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:12px 18px 30px;display:flex;flex-direction:column;gap:18px;">
+        <label style="display:block;">
+          <span style="font:700 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B7590;">Sentence</span>
+          <textarea dir="auto" rows="3" value="{{ edSentence }}" onChange="{{ onEdSentence }}" placeholder="मैं स्कूल जाता हूँ" style="width:100%;margin-top:8px;padding:12px 14px;border:1.5px solid #D5DBEA;border-radius:14px;background:#FFFFFF;font:500 17px/1.65 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#1E2A44;resize:vertical;min-height:86px;" style-focus="border-color:#3A4A9F;"></textarea>
+        </label>
+        <label style="display:block;">
+          <span style="font:700 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B7590;">Translation <span style="color:#A9B1C7;text-transform:none;letter-spacing:0;font-weight:600;">· optional</span></span>
+          <input dir="auto" value="{{ edTranslation }}" onChange="{{ onEdTranslation }}" placeholder="I go to school" style="width:100%;margin-top:8px;height:50px;padding:0 14px;border:1.5px solid #D5DBEA;border-radius:14px;background:#FFFFFF;font:500 15.5px/1.4 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#1E2A44;" style-focus="border-color:#3A4A9F;">
+        </label>
+        <label style="display:block;">
+          <span style="font:700 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B7590;">Transliteration <span style="color:#A9B1C7;text-transform:none;letter-spacing:0;font-weight:600;">· optional</span></span>
+          <input dir="auto" value="{{ edTranslit }}" onChange="{{ onEdTranslit }}" placeholder="main school jaata hoon" style="width:100%;margin-top:8px;height:50px;padding:0 14px;border:1.5px solid #D5DBEA;border-radius:14px;background:#FFFFFF;font:500 15.5px/1.4 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#1E2A44;" style-focus="border-color:#3A4A9F;">
+        </label>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ BULK ADD ============ -->
+  <sc-if value="{{ isBulk }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Bulk add" style="display:flex;flex-direction:column;height:100%;">
+      <div style="display:flex;align-items:center;gap:6px;padding:10px 14px 4px 10px;">
+        <button onClick="{{ onBulkBack }}" aria-label="Back" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:13px;cursor:pointer;color:#1E2A44;flex:none;padding:0;" style-active="background:#E7EAF3;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M14.5 5.5 L8 12 L14.5 18.5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+        <div style="flex:1;min-width:0;">
+          <div style="font:700 17px/1.2 'Bricolage Grotesque',system-ui,sans-serif;">Bulk add</div>
+          <div style="font:500 12px/1.3 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ deckName }}</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:10px 18px 30px;display:flex;flex-direction:column;gap:12px;">
+        <div style="background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;padding:14px 16px;">
+          <div style="font:700 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B7590;">Format</div>
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;font:500 13.5px/1.5 'Bricolage Grotesque',system-ui,sans-serif;color:#3E4763;">
+            <div style="display:flex;align-items:baseline;gap:8px;"><span style="font:700 12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:#EDF0FA;color:#3A4A9F;padding:2px 7px;border-radius:6px;border:1px solid #D8DEF2;flex:none;white-space:pre;">§</span><span>starts a new card</span></div>
+            <div style="display:flex;align-items:baseline;gap:8px;"><span style="font:700 12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:#EDF0FA;color:#3A4A9F;padding:2px 7px;border-radius:6px;border:1px solid #D8DEF2;flex:none;white-space:pre;">{ }</span><span>wraps the translation</span></div>
+            <div style="display:flex;align-items:baseline;gap:8px;"><span style="font:700 12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;background:#EDF0FA;color:#3A4A9F;padding:2px 7px;border-radius:6px;border:1px solid #D8DEF2;flex:none;white-space:pre;">[ ]</span><span>wraps the transliteration</span></div>
+            <div style="color:#6B7590;">Everything else in the segment is the sentence.</div>
+          </div>
+          <div dir="ltr" style="margin-top:11px;background:#F1F3F7;border-radius:11px;padding:10px 12px;font:500 13px/1.75 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#3E4763;word-break:break-word;">मैं स्कूल जाता हूँ {I go to school} [main school jaata hoon] § دروازہ کھولو {Open the door} [darwaza kholo] § This one has no translation</div>
+        </div>
+        <textarea dir="auto" value="{{ bulkText }}" onChange="{{ onBulkText }}" placeholder="Sentence {translation} [transliteration] § next sentence …" style="width:100%;padding:13px 14px;border:1.5px solid #D5DBEA;border-radius:14px;background:#FFFFFF;font:500 15px/1.75 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#1E2A44;resize:vertical;min-height:150px;" style-focus="border-color:#3A4A9F;"></textarea>
+        <div style="display:flex;gap:10px;">
+          <button onClick="{{ onBulkPreview }}" disabled="{{ previewDisabled }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:46px;padding:0 14px;border:1.5px solid #D5DBEA;border-radius:13px;background:#FFFFFF;color:#2B3A7E;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;opacity:{{ previewOpacity }};" style-hover="background:#F7F9FD;" style-active="transform:translateY(1px);">Preview</button>
+          <button onClick="{{ onImport }}" disabled="{{ importDisabled }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:46px;padding:0 14px;border:none;border-radius:13px;background:#3A4A9F;color:#FFFFFF;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;opacity:{{ importOpacity }};" style-hover="background:#33418F;" style-active="transform:translateY(1px);">{{ importLabel }}</button>
+        </div>
+        <sc-if value="{{ bulkHasPreview }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ bulkHasValid }}" hint-placeholder-val="{{ false }}">
+            <div style="font:700 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#1F7A55;margin:8px 2px 0;">Ready to import · {{ bulkValidCount }}</div>
+            <sc-for list="{{ bulkValid }}" as="v" hint-placeholder-count="2">
+              <div style="background:#FFFFFF;border:1px solid #DCEDE3;border-radius:14px;padding:11px 14px;display:flex;gap:10px;">
+                <span style="width:22px;height:22px;border-radius:50%;background:#DCF2E5;display:flex;align-items:center;justify-content:center;flex:none;margin-top:2px;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 12.5 L10 17.5 L19 7" stroke="#1F7A55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </span>
+                <span style="flex:1;min-width:0;display:block;">
+                  <span dir="auto" style="display:block;font:500 15px/1.55 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;word-break:break-word;">{{ v.sentence }}</span>
+                  <sc-if value="{{ v.hasTr }}" hint-placeholder-val="{{ false }}"><span dir="auto" style="display:block;font:500 12.5px/1.5 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:2px;">{{ v.translation }}</span></sc-if>
+                  <sc-if value="{{ v.hasTl }}" hint-placeholder-val="{{ false }}"><span dir="auto" style="display:block;font:italic 500 12.5px/1.5 system-ui,'Noto Sans',sans-serif;color:#8891AB;margin-top:1px;">{{ v.transliteration }}</span></sc-if>
+                </span>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ bulkHasErrors }}" hint-placeholder-val="{{ false }}">
+            <div style="font:700 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#C4423C;margin:8px 2px 0;">Problems · {{ bulkErrorCount }}</div>
+            <sc-for list="{{ bulkErrors }}" as="er" hint-placeholder-count="1">
+              <div style="background:#FFFFFF;border:1px solid #F2D7D5;border-radius:14px;padding:11px 14px;display:flex;gap:10px;">
+                <span style="width:22px;height:22px;border-radius:50%;background:#FAE3E1;display:flex;align-items:center;justify-content:center;flex:none;margin-top:2px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 6.5 V13" stroke="#C4423C" stroke-width="2.6" stroke-linecap="round"></path><circle cx="12" cy="17.2" r="1.5" fill="#C4423C"></circle></svg>
+                </span>
+                <span style="flex:1;min-width:0;display:block;">
+                  <span dir="auto" style="display:block;font:500 13.5px/1.5 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#6B7590;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ er.raw }}</span>
+                  <span style="display:block;font:600 12.5px/1.4 'Bricolage Grotesque',system-ui,sans-serif;color:#C4423C;margin-top:2px;">{{ er.reason }}</span>
+                </span>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ bulkNothing }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:16px;color:#6B7590;font:500 13px/1.5 'Bricolage Grotesque',system-ui,sans-serif;">Nothing to import yet — type some sentences above.</div>
+          </sc-if>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ PRACTICE ============ -->
+  <sc-if value="{{ isPractice }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Practice" style="display:flex;flex-direction:column;height:100%;">
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 12px 6px 10px;">
+        <button onClick="{{ onExit }}" aria-label="End session" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:13px;cursor:pointer;color:#1E2A44;flex:none;padding:0;" style-active="background:#E7EAF3;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"></path></svg>
+        </button>
+        <sc-if value="{{ prIsActive }}" hint-placeholder-val="{{ true }}">
+          <span style="font:700 13.5px/1 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;letter-spacing:.02em;flex:none;">{{ prProgress }}</span>
+        </sc-if>
+        <span style="flex:1;"></span>
+        <select aria-label="Speech language" value="{{ ttsLang }}" onChange="{{ onTtsLang }}" style="height:38px;border-radius:11px;border:1.5px solid #D5DBEA;background:#FFFFFF;font:600 12.5px 'Bricolage Grotesque',system-ui,sans-serif;color:#1E2A44;padding:0 8px;max-width:110px;flex:none;cursor:pointer;">
+          <option value="hi-IN">Hindi</option>
+          <option value="te-IN">Telugu</option>
+          <option value="kn-IN">Kannada</option>
+          <option value="ml-IN">Malayalam</option>
+          <option value="ta-IN">Tamil</option>
+          <option value="en-IN">English</option>
+          <option value="ur-PK">Urdu</option>
+          <option value="fa-IR">Persian</option>
+          <option value="ar-SA">Arabic</option>
+        </select>
+        <span style="display:flex;align-items:center;gap:1px;flex:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" style="flex:none;"><path d="M4 9.5v5h3.2L12 18.7V5.3L7.2 9.5H4z" fill="#6B7590"></path><path d="M15.5 8.7a4.6 4.6 0 0 1 0 6.6" stroke="#6B7590" stroke-width="1.9" fill="none" stroke-linecap="round"></path></svg>
+          <button role="switch" aria-checked="{{ ttsOn }}" aria-label="Speak words aloud" onClick="{{ onTtsToggle }}" style="width:52px;height:44px;background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;">
+            <span style="width:46px;height:27px;border-radius:999px;display:block;position:relative;transition:background-color .18s;background:{{ ttsSwBg }};">
+              <span style="position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(30,42,68,.35);transition:transform .18s;transform:{{ ttsSwX }};"></span>
+            </span>
+          </button>
+        </span>
+      </div>
+      <div style="height:3px;background:#E3E7F0;margin:0 18px;border-radius:999px;overflow:hidden;flex:none;">
+        <div style="height:100%;background:#3A4A9F;border-radius:999px;transition:width .25s ease;width:{{ prBarW }};"></div>
+      </div>
+
+      <sc-if value="{{ prIsActive }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;min-height:0;overflow-y:auto;padding:16px 18px 8px;">
+          <div style="animation:{{ prCardAnim }};">
+            <sc-if value="{{ prHasTranslation }}" hint-placeholder-val="{{ true }}">
+              <div dir="auto" style="font:600 19px/1.45 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#1E2A44;margin-bottom:5px;">{{ prTranslation }}</div>
+            </sc-if>
+            <sc-if value="{{ prHasTranslit }}" hint-placeholder-val="{{ false }}">
+              <div dir="auto" style="font:500 14px/1.5 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#6B7590;margin-bottom:5px;">{{ prTranslit }}</div>
+            </sc-if>
+            <div dir="{{ prDir }}" style="margin-top:12px;min-height:90px;border:1.5px solid {{ prAnswerBorder }};background:{{ prAnswerBg }};border-radius:18px;padding:12px;display:flex;flex-wrap:wrap;gap:9px;align-content:flex-start;align-items:flex-start;transition:background-color .3s,border-color .3s;animation:{{ prAnswerAnim }};">
+              <sc-for list="{{ placedV }}" as="t" hint-placeholder-count="0">
+                <span style="position:relative;display:inline-flex;max-width:100%;animation:sbPlace .4s cubic-bezier(.3,1.45,.55,1);">
+                  <span dir="auto" style="display:inline-flex;align-items:center;min-height:46px;padding:9px 13px;border-radius:12px;border:1.5px solid {{ t.border }};border-bottom:3.5px solid {{ t.edge }};background:{{ t.bg }};color:{{ t.color }};font:600 19px/1.35 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;max-width:100%;word-break:break-word;transition:background-color .3s,border-color .3s,color .3s;">{{ t.text }}</span>
+                  <sc-if value="{{ t.showSpeaker }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ t.onSpeak }}" aria-label="Speak word" style="position:absolute;top:-9px;right:-9px;width:27px;height:27px;border-radius:50%;background:#3A4A9F;border:2px solid #F1F3F7;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:2;box-shadow:0 1px 3px rgba(30,42,68,.3);" style-active="transform:scale(.92);">
+                      <svg width="12" height="12" viewBox="0 0 24 24"><path d="M4 9.5v5h3.2L12 18.7V5.3L7.2 9.5H4z" fill="#FFFFFF"></path><path d="M15.5 8.7a4.6 4.6 0 0 1 0 6.6" stroke="#FFFFFF" stroke-width="1.9" fill="none" stroke-linecap="round"></path><path d="M18 6.4a8 8 0 0 1 0 11.2" stroke="#FFFFFF" stroke-width="1.9" fill="none" stroke-linecap="round"></path></svg>
+                    </button>
+                  </sc-if>
+                </span>
+              </sc-for>
+              <sc-if value="{{ prAnswerEmpty }}" hint-placeholder-val="{{ true }}">
+                <span style="font:500 13.5px/1.4 'Bricolage Grotesque',system-ui,sans-serif;color:#A9B1C7;padding:15px 6px;">Tap the words in order</span>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ prDone }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:13px;display:flex;align-items:center;gap:11px;animation:sbRise .32s ease;">
+                <span style="width:34px;height:34px;border-radius:50%;background:{{ prDoneCircle }};display:flex;align-items:center;justify-content:center;flex:none;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12.5 L10 17.5 L19 7" stroke="{{ prDoneIcon }}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </span>
+                <span style="min-width:0;display:block;">
+                  <span style="display:block;font:700 15.5px/1.2 'Bricolage Grotesque',system-ui,sans-serif;color:{{ prDoneTitleColor }};">{{ prDoneTitle }}</span>
+                  <span style="display:block;font:500 12.5px/1.35 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:2px;">{{ prDoneSub }}</span>
+                </span>
+              </div>
+            </sc-if>
+
+            <div dir="{{ prDir }}" style="margin-top:20px;display:flex;flex-wrap:wrap;gap:11px;align-content:flex-start;padding:2px 0 10px;">
+              <sc-for list="{{ poolV }}" as="b" hint-placeholder-count="4">
+                <span style="position:relative;display:inline-flex;max-width:100%;animation:{{ b.shakeAnim }};">
+                  <button onClick="{{ b.onTap }}" dir="auto" style="display:inline-flex;align-items:center;min-height:52px;padding:11px 16px;border-radius:14px;border:1.5px solid {{ b.border }};border-bottom:4px solid {{ b.edge }};background:#FFFFFF;color:#1E2A44;font:600 20px/1.35 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;cursor:pointer;box-shadow:0 1px 2px rgba(30,42,68,.06);max-width:100%;word-break:break-word;text-align:start;transition:border-color .2s;" style-hover="border-color:#B9C2DC;" style-active="transform:translateY(2px);border-bottom-width:2px;">{{ b.text }}</button>
+                  <sc-if value="{{ b.showSpeaker }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ b.onSpeak }}" aria-label="Speak word" style="position:absolute;top:-9px;right:-9px;width:27px;height:27px;border-radius:50%;background:#3A4A9F;border:2px solid #F1F3F7;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;z-index:2;box-shadow:0 1px 3px rgba(30,42,68,.3);" style-active="transform:scale(.92);">
+                      <svg width="12" height="12" viewBox="0 0 24 24"><path d="M4 9.5v5h3.2L12 18.7V5.3L7.2 9.5H4z" fill="#FFFFFF"></path><path d="M15.5 8.7a4.6 4.6 0 0 1 0 6.6" stroke="#FFFFFF" stroke-width="1.9" fill="none" stroke-linecap="round"></path><path d="M18 6.4a8 8 0 0 1 0 11.2" stroke="#FFFFFF" stroke-width="1.9" fill="none" stroke-linecap="round"></path></svg>
+                    </button>
+                  </sc-if>
+                </span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="padding:10px 18px 16px;display:flex;gap:10px;flex:none;">
+          <sc-if value="{{ prNotDone }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ onSkip }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 14px;border:1.5px solid #D5DBEA;border-radius:13px;background:#FFFFFF;color:#2B3A7E;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;" style-hover="background:#F7F9FD;" style-active="transform:translateY(1px);">Skip</button>
+          </sc-if>
+          <sc-if value="{{ prDone }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ onNext }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 14px;border:none;border-radius:13px;background:#3A4A9F;color:#FFFFFF;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;" style-hover="background:#33418F;" style-active="transform:translateY(1px);">Next</button>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ prIsEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 28px 60px;animation:sbRise .3s ease;">
+          <div style="font:700 20px/1.3 'Bricolage Grotesque',system-ui,sans-serif;">All cards mastered 🎉</div>
+          <div style="font:500 13.5px/1.55 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:8px;max-width:270px;">Every card in “{{ prEmptyDeckName }}” is mastered, so Remaining only has nothing left.</div>
+          <button onClick="{{ onPracticeAll }}" style="display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border:none;border-radius:13px;background:#3A4A9F;color:#FFFFFF;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;margin-top:22px;min-width:220px;" style-hover="background:#33418F;" style-active="transform:translateY(1px);">Practice all anyway</button>
+          <button onClick="{{ onResetAllPractice }}" style="display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border:1.5px solid #D5DBEA;border-radius:13px;background:#FFFFFF;color:#2B3A7E;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;margin-top:10px;min-width:220px;" style-hover="background:#F7F9FD;" style-active="transform:translateY(1px);">Reset progress</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ prIsSummary }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 28px 60px;animation:sbRise .3s ease;">
+          <div style="font:700 11.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.11em;text-transform:uppercase;color:#8891AB;">Session complete</div>
+          <div style="font:800 56px/1 'Bricolage Grotesque',system-ui,sans-serif;margin-top:16px;letter-spacing:-.02em;">{{ sumCompleted }}</div>
+          <div style="font:500 14px/1.3 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:7px;">{{ sumCompletedLabel }}</div>
+          <sc-if value="{{ sumHasNewly }}" hint-placeholder-val="{{ false }}">
+            <span style="margin-top:15px;background:#FBF0DB;color:#8A6210;font:700 12.5px/1 'Bricolage Grotesque',system-ui,sans-serif;padding:9px 14px;border-radius:999px;">{{ sumNewlyLine }}</span>
+          </sc-if>
+          <button onClick="{{ onAgain }}" style="display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border:none;border-radius:13px;background:#3A4A9F;color:#FFFFFF;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;margin-top:24px;min-width:220px;" style-hover="background:#33418F;" style-active="transform:translateY(1px);">Practice again</button>
+          <button onClick="{{ onDoneExit }}" style="display:flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border:1.5px solid #D5DBEA;border-radius:13px;background:#FFFFFF;color:#2B3A7E;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;margin-top:10px;min-width:220px;" style-hover="background:#F7F9FD;" style-active="transform:translateY(1px);">Done</button>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ============ ACTION SHEET ============ -->
+  <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:flex-end;">
+      <button onClick="{{ onSheetClose }}" aria-label="Close menu" style="position:absolute;inset:0;background:rgba(22,30,54,.44);border:none;cursor:pointer;animation:sbFade .2s ease;padding:0;"></button>
+      <div style="position:relative;background:#FFFFFF;border-radius:20px 20px 0 0;padding:8px 10px 18px;animation:sbRise .27s cubic-bezier(.3,1.1,.5,1);box-shadow:0 -10px 34px rgba(22,30,54,.2);max-height:70%;overflow-y:auto;">
+        <div style="width:36px;height:4px;border-radius:999px;background:#E3E7F0;margin:4px auto 8px;"></div>
+        <sc-if value="{{ sheetHasTitle }}" hint-placeholder-val="{{ false }}">
+          <div style="font:700 13px/1.35 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;padding:4px 12px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ sheetTitle }}</div>
+        </sc-if>
+        <sc-for list="{{ sheetItems }}" as="it" hint-placeholder-count="3">
+          <button onClick="{{ it.onTap }}" style="display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 12px;background:none;border:none;border-radius:13px;font:600 15px/1.3 'Bricolage Grotesque',system-ui,sans-serif;color:{{ it.color }};cursor:pointer;text-align:start;" style-hover="background:#F7F9FD;" style-active="background:#F1F3F7;">
+            <span style="flex:1;min-width:0;">{{ it.label }}</span>
+            <sc-if value="{{ it.check }}" hint-placeholder-val="{{ false }}">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex:none;"><path d="M5 12.5 L10 17.5 L19 7" stroke="#3A4A9F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ MODAL ============ -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:26px;">
+      <button onClick="{{ onModalCancel }}" aria-label="Cancel" style="position:absolute;inset:0;background:rgba(22,30,54,.44);border:none;cursor:pointer;animation:sbFade .2s ease;padding:0;"></button>
+      <div style="position:relative;width:100%;max-width:330px;background:#FFFFFF;border-radius:20px;padding:20px 18px 16px;animation:sbRise .24s cubic-bezier(.3,1.1,.5,1);box-shadow:0 14px 44px rgba(22,30,54,.28);">
+        <div style="font:700 17px/1.25 'Bricolage Grotesque',system-ui,sans-serif;">{{ modalTitle }}</div>
+        <sc-if value="{{ modalHasMsg }}" hint-placeholder-val="{{ false }}">
+          <div style="font:500 13.5px/1.55 'Bricolage Grotesque',system-ui,sans-serif;color:#6B7590;margin-top:7px;">{{ modalMsg }}</div>
+        </sc-if>
+        <sc-if value="{{ modalHasInput }}" hint-placeholder-val="{{ false }}">
+          <input dir="auto" autoFocus="{{ true }}" value="{{ modalText }}" onChange="{{ onModalText }}" onKeyDown="{{ onModalKey }}" placeholder="{{ modalPlaceholder }}" style="margin-top:14px;width:100%;height:47px;border:1.5px solid #D5DBEA;border-radius:13px;padding:0 13px;background:#FAFBFE;font:500 15.5px/1.3 system-ui,'Noto Sans','Noto Sans Devanagari','Noto Naskh Arabic',sans-serif;color:#1E2A44;" style-focus="border-color:#3A4A9F;background:#FFFFFF;">
+        </sc-if>
+        <div style="display:flex;gap:10px;margin-top:17px;">
+          <button onClick="{{ onModalCancel }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:46px;padding:0 14px;border:1.5px solid #D5DBEA;border-radius:13px;background:#FFFFFF;color:#2B3A7E;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;" style-hover="background:#F7F9FD;" style-active="transform:translateY(1px);">Cancel</button>
+          <button onClick="{{ onModalConfirm }}" disabled="{{ modalConfirmDisabled }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:46px;padding:0 14px;border:none;border-radius:13px;background:{{ modalConfirmBg }};color:#FFFFFF;font:600 14.5px/1 'Bricolage Grotesque',system-ui,sans-serif;cursor:pointer;opacity:{{ modalConfirmOpacity }};" style-active="transform:translateY(1px);">{{ modalConfirmLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ TOAST ============ -->
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:16px;right:16px;bottom:22px;z-index:80;background:#232C49;color:#F5F7FD;border-radius:14px;padding:13px 15px;font:500 13.5px/1.5 'Bricolage Grotesque',system-ui,sans-serif;box-shadow:0 10px 28px rgba(22,30,54,.4);animation:sbRise .28s cubic-bezier(.3,1.1,.5,1);">{{ toastMsg }}</div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 393, &quot;height&quot;: 852 },
+  &quot;masteryThreshold&quot;: { &quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 2, &quot;min&quot;: 1, &quot;max&quot;: 5, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Practice rules&quot; },
+  &quot;autoAdvanceMs&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 900, &quot;min&quot;: 300, &quot;max&quot;: 2500, &quot;step&quot;: 100, &quot;unit&quot;: &quot;ms&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Practice rules&quot; }
+}">
+class Component extends DCLogic {
+  state = this.initState();
+
+  // ---------------- constants & seed ----------------
+  th() { return Math.max(1, Math.round(this.props.masteryThreshold ?? 2)); }
+  advanceMs() { return Math.max(200, this.props.autoAdvanceMs ?? 900); }
+  langList() {
+    return [
+      { code: 'hi-IN', label: 'Hindi' }, { code: 'te-IN', label: 'Telugu' },
+      { code: 'kn-IN', label: 'Kannada' }, { code: 'ml-IN', label: 'Malayalam' },
+      { code: 'ta-IN', label: 'Tamil' }, { code: 'en-IN', label: 'English' },
+      { code: 'ur-PK', label: 'Urdu' }, { code: 'fa-IR', label: 'Persian' },
+      { code: 'ar-SA', label: 'Arabic' },
+    ];
+  }
+  uuid() { return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+  initState() {
+    const t = Date.now();
+    const mk = (id, deckId, sentence, translation, transliteration, extra) => Object.assign(
+      { id, deckId, sentence, translation, transliteration, streak: 0, masteredAt: null, createdAt: t, updatedAt: t }, extra || {});
+    return {
+      folders: [{ id: 'f1', name: 'Indian languages', createdAt: t }],
+      decks: [
+        { id: 'd1', name: 'Hindi basics', folderId: 'f1', practiceRemainingOnly: false, createdAt: t },
+        { id: 'd2', name: 'Urdu', folderId: 'f1', practiceRemainingOnly: false, createdAt: t },
+        { id: 'd3', name: 'English', folderId: null, practiceRemainingOnly: false, createdAt: t },
+      ],
+      cards: [
+        mk('c1', 'd1', 'वह वहाँ है और वह वहाँ है', 'He is there and he is there', 'vah vahaan hai aur vah vahaan hai'),
+        mk('c2', 'd1', 'मैं स्कूल जाता हूँ', 'I go to school', 'main school jaata hoon'),
+        mk('c3', 'd1', 'पानी ठंडा है', 'The water is cold', 'paani thanda hai', { streak: 2, masteredAt: t - 86400000 }),
+        mk('c4', 'd2', 'دروازہ کھولو', 'Open the door', 'darwaza kholo'),
+        mk('c5', 'd2', 'میں ٹھیک ہوں', 'I am fine', 'main theek hoon'),
+        mk('c6', 'd3', 'the cat and the dog sat on the mat', '', ''),
+      ],
+      settings: { ttsEnabled: false, ttsLang: 'hi-IN' },
+      screen: 'home', deckId: null,
+      collapsed: {},
+      sheet: null, modal: null, toast: null,
+      ed: null, bulk: null, session: null,
+    };
+  }
+
+  // ---------------- pure helpers ----------------
+  tokenize(sentence) { return sentence.trim().split(/\s+/); }
+  shuffleArr(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const tmp = a[i]; a[i] = a[j]; a[j] = tmp; }
+    return a;
+  }
+  extractSpan(str, open, close) {
+    const i = str.indexOf(open);
+    if (i === -1) return { rest: str, value: '', error: null };
+    const j = str.indexOf(close, i + 1);
+    if (j === -1) return { rest: str, value: '', error: 'Unclosed ' + open + ' — missing ' + close };
+    const value = str.slice(i + 1, j);
+    const rest = str.slice(0, i) + ' ' + str.slice(j + 1);
+    const k = rest.indexOf(open);
+    if (k !== -1) {
+      const second = rest.indexOf(close, k + 1) !== -1;
+      return { rest, value, error: second ? ('More than one ' + open + '\u2026' + close + ' span') : ('Unclosed ' + open + ' — missing ' + close) };
+    }
+    return { rest, value, error: null };
+  }
+  parseSegment(seg) {
+    const tr = this.extractSpan(seg, '{', '}');
+    if (tr.error) return { error: tr.error };
+    const tl = this.extractSpan(tr.rest, '[', ']');
+    if (tl.error) return { error: tl.error };
+    const sentence = tl.rest.replace(/\s+/g, ' ').trim();
+    if (!sentence) return { error: 'Empty sentence' };
+    return { sentence, translation: tr.value.trim(), transliteration: tl.value.trim(), error: null };
+  }
+  parseBulk(input) {
+    const segments = String(input).split('\u00A7').map(s => s.trim()).filter(s => s.length > 0);
+    const valid = [], errors = [];
+    segments.forEach(seg => {
+      const r = this.parseSegment(seg);
+      if (r.error) errors.push({ raw: seg, reason: r.error });
+      else valid.push({ sentence: r.sentence, translation: r.translation, transliteration: r.transliteration });
+    });
+    return { valid, errors };
+  }
+
+  // ---------------- data access ----------------
+  deckById(id) { return this.state.decks.find(d => d.id === id); }
+  cardById(id) { return this.state.cards.find(c => c.id === id); }
+  deckCards(deckId) { return this.state.cards.filter(c => c.deckId === deckId); }
+  updateCard(id, patch) { this.setState(s => ({ cards: s.cards.map(c => c.id === id ? Object.assign({}, c, patch) : c) })); }
+  updateDeck(id, patch) { this.setState(s => ({ decks: s.decks.map(d => d.id === id ? Object.assign({}, d, patch) : d) })); }
+  countLine(deckId) {
+    const cards = this.deckCards(deckId);
+    const m = cards.filter(c => c.masteredAt != null).length;
+    return cards.length + (cards.length === 1 ? ' card' : ' cards') + ' \u00B7 ' + m + ' mastered';
+  }
+
+  // ---------------- lifecycle ----------------
+  componentDidMount() {
+    this._warned = {}; this._shakeT = {};
+    const synth = window.speechSynthesis;
+    this._voices = synth ? synth.getVoices() : [];
+    if (synth) {
+      this._onVoices = () => { this._voices = synth.getVoices(); };
+      if (synth.addEventListener) synth.addEventListener('voiceschanged', this._onVoices);
+      else synth.onvoiceschanged = this._onVoices;
+    }
+  }
+  componentWillUnmount() {
+    const synth = window.speechSynthesis;
+    if (synth) {
+      if (this._onVoices && synth.removeEventListener) synth.removeEventListener('voiceschanged', this._onVoices);
+      try { synth.cancel(); } catch (e) {}
+    }
+    clearTimeout(this._advT); clearTimeout(this._toastT);
+    const st = this._shakeT || {};
+    Object.keys(st).forEach(k => clearTimeout(st[k]));
+  }
+
+  // ---------------- toast / tts ----------------
+  showToast(msg) {
+    clearTimeout(this._toastT);
+    this.setState({ toast: msg });
+    this._toastT = setTimeout(() => this.setState({ toast: null }), 4500);
+  }
+  warnOnce(key, msg) {
+    this._warned = this._warned || {};
+    if (this._warned[key]) return;
+    this._warned[key] = true;
+    this.showToast(msg);
+  }
+  speak(text) {
+    const lang = this.state.settings.ttsLang;
+    const synth = window.speechSynthesis;
+    if (!synth || !window.SpeechSynthesisUtterance) { this.warnOnce('nosynth', 'Speech is not available in this browser.'); return; }
+    try { synth.cancel(); } catch (e) {}
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    const primary = lang.split('-')[0].toLowerCase();
+    const voices = (this._voices && this._voices.length ? this._voices : synth.getVoices()) || [];
+    const match = voices.find(v => String(v.lang || '').replace(/_/g, '-').toLowerCase().indexOf(primary) === 0);
+    if (match) { u.voice = match; }
+    else {
+      const entry = this.langList().find(l => l.code === lang);
+      const label = entry ? entry.label : lang;
+      this.warnOnce(lang, 'No ' + label + ' voice on this device — install it in Android Settings \u2192 Text-to-speech (Speech Services by Google).');
+    }
+    try { synth.speak(u); } catch (e) {}
+  }
+
+  // ---------------- practice ----------------
+  buildAttempt(card) {
+    const tokens = this.tokenize(card.sentence);
+    let order = this.shuffleArr(tokens.map((_, i) => i));
+    if (new Set(tokens).size > 1) {
+      const sameAsCorrect = (o) => o.every((v, i) => tokens[v] === tokens[i]);
+      let guard = 0;
+      while (sameAsCorrect(order) && guard < 100) { order = this.shuffleArr(order); guard++; }
+    }
+    return {
+      cardId: card.id, tokens,
+      pool: order.map(ti => ({ k: card.id + '-' + ti, text: tokens[ti], gone: false, shake: false })),
+      placed: 0, mistakes: 0, done: false, doneInfo: null,
+      rtl: /[\u0590-\u08FF]/.test(card.sentence),
+    };
+  }
+  startSession(deckId, forceAll) {
+    clearTimeout(this._advT);
+    const deck = this.deckById(deckId);
+    if (!deck) return;
+    const all = this.deckCards(deckId);
+    if (!all.length) return;
+    const pool = (deck.practiceRemainingOnly && !forceAll) ? all.filter(c => c.masteredAt == null) : all;
+    if (!pool.length) {
+      this.setState({ screen: 'practice', deckId, sheet: null, modal: null, session: { deckId, empty: true, summary: false, queue: [], index: 0, completed: 0, newly: 0, attempt: null } });
+      return;
+    }
+    const queue = this.shuffleArr(pool.map(c => c.id));
+    const first = this.cardById(queue[0]);
+    this.setState({ screen: 'practice', deckId, sheet: null, modal: null, session: { deckId, empty: false, summary: false, queue, index: 0, completed: 0, newly: 0, attempt: this.buildAttempt(first) } });
+  }
+  applyCompletion(cardId, mistakes) {
+    const card = this.cardById(cardId);
+    if (!card) return { clean: mistakes === 0, newly: false, streak: 0, mastered: false, mistakes };
+    const clean = mistakes === 0;
+    const streak = clean ? card.streak + 1 : 0;
+    let masteredAt = card.masteredAt;
+    let newly = false;
+    if (clean && streak >= this.th() && masteredAt == null) { masteredAt = Date.now(); newly = true; }
+    this.updateCard(cardId, { streak, masteredAt });
+    return { clean, newly, streak, mastered: masteredAt != null, mistakes };
+  }
+  tapBlock(k) {
+    const ses = this.state.session;
+    if (!ses || !ses.attempt || ses.attempt.done) return;
+    const at = ses.attempt;
+    const b = at.pool.find(x => x.k === k && !x.gone);
+    if (!b) return;
+    const expected = at.tokens[at.placed];
+    if (b.text === expected) {
+      const placed = at.placed + 1;
+      const isComplete = placed === at.tokens.length;
+      let attempt = Object.assign({}, at, { placed, pool: at.pool.map(x => x.k === k ? Object.assign({}, x, { gone: true, shake: false }) : x) });
+      if (isComplete) {
+        const res = this.applyCompletion(at.cardId, at.mistakes);
+        attempt = Object.assign({}, attempt, { done: true, doneInfo: res });
+        clearTimeout(this._advT);
+        this._advT = setTimeout(() => this.advance(false), this.advanceMs());
+        this.setState(s => ({ session: Object.assign({}, s.session, { attempt, completed: s.session.completed + 1, newly: s.session.newly + (res.newly ? 1 : 0) }) }));
+      } else {
+        this.setState(s => ({ session: Object.assign({}, s.session, { attempt }) }));
+      }
+    } else {
+      if (navigator.vibrate) { try { navigator.vibrate(60); } catch (e) {} }
+      this.setState(s => {
+        if (!s.session || !s.session.attempt) return null;
+        const a2 = s.session.attempt;
+        return { session: Object.assign({}, s.session, { attempt: Object.assign({}, a2, { mistakes: a2.mistakes + 1, pool: a2.pool.map(x => x.k === k ? Object.assign({}, x, { shake: true }) : x) }) }) };
+      });
+      this._shakeT = this._shakeT || {};
+      clearTimeout(this._shakeT[k]);
+      this._shakeT[k] = setTimeout(() => {
+        this.setState(s => {
+          if (!s.session || !s.session.attempt) return null;
+          const a2 = s.session.attempt;
+          return { session: Object.assign({}, s.session, { attempt: Object.assign({}, a2, { pool: a2.pool.map(x => x.k === k ? Object.assign({}, x, { shake: false }) : x) }) }) };
+        });
+      }, 430);
+    }
+  }
+  advance(force) {
+    clearTimeout(this._advT);
+    const ses = this.state.session;
+    if (!ses || ses.summary || ses.empty) return;
+    if (!force && ses.attempt && !ses.attempt.done) return;
+    const next = ses.index + 1;
+    if (next >= ses.queue.length) { this.setState({ session: Object.assign({}, ses, { summary: true, attempt: null }) }); return; }
+    const card = this.cardById(ses.queue[next]);
+    if (!card) { this.setState({ session: Object.assign({}, ses, { summary: true, attempt: null }) }); return; }
+    this.setState({ session: Object.assign({}, ses, { index: next, attempt: this.buildAttempt(card) }) });
+  }
+  exitPractice() {
+    clearTimeout(this._advT);
+    const synth = window.speechSynthesis;
+    if (synth) { try { synth.cancel(); } catch (e) {} }
+    this.setState({ screen: 'home', session: null });
+  }
+
+  // ---------------- sheets & modals ----------------
+  openSheet(kind, id) { this.setState({ sheet: { kind, id } }); }
+  openInputModal(kind, id, title, placeholder, initial, confirmLabel) {
+    this.setState({ modal: { kind, id, title, placeholder, text: initial, confirmLabel, input: true, danger: false }, sheet: null });
+  }
+  openConfirmModal(kind, id, title, msg, confirmLabel, danger) {
+    this.setState({ modal: { kind, id, title, msg, confirmLabel, input: false, danger: !!danger }, sheet: null });
+  }
+  modalConfirm() {
+    const m = this.state.modal;
+    if (!m) return;
+    const text = (m.text || '').trim();
+    if (m.input && !text) return;
+    if (m.kind === 'newDeck') {
+      this.setState(s => ({ decks: s.decks.concat([{ id: this.uuid(), name: text, folderId: null, practiceRemainingOnly: false, createdAt: Date.now() }]), modal: null }));
+    } else if (m.kind === 'newFolder') {
+      this.setState(s => ({ folders: s.folders.concat([{ id: this.uuid(), name: text, createdAt: Date.now() }]), modal: null }));
+    } else if (m.kind === 'renameDeck') {
+      this.setState(s => ({ decks: s.decks.map(d => d.id === m.id ? Object.assign({}, d, { name: text }) : d), modal: null }));
+    } else if (m.kind === 'renameFolder') {
+      this.setState(s => ({ folders: s.folders.map(f => f.id === m.id ? Object.assign({}, f, { name: text }) : f), modal: null }));
+    } else if (m.kind === 'resetDeck') {
+      this.setState(s => ({ cards: s.cards.map(c => c.deckId === m.id ? Object.assign({}, c, { streak: 0, masteredAt: null }) : c), modal: null }));
+    } else if (m.kind === 'deleteDeck') {
+      this.setState(s => ({ decks: s.decks.filter(d => d.id !== m.id), cards: s.cards.filter(c => c.deckId !== m.id), modal: null }));
+    } else if (m.kind === 'deleteFolder') {
+      this.setState(s => ({ folders: s.folders.filter(f => f.id !== m.id), decks: s.decks.map(d => d.folderId === m.id ? Object.assign({}, d, { folderId: null }) : d), modal: null }));
+    } else if (m.kind === 'deleteCard') {
+      this.setState(s => ({ cards: s.cards.filter(c => c.id !== m.id), modal: null }));
+    } else {
+      this.setState({ modal: null });
+    }
+  }
+  setMastered(cardId, on) {
+    if (on) this.updateCard(cardId, { masteredAt: Date.now(), streak: this.th() });
+    else this.updateCard(cardId, { masteredAt: null, streak: 0 });
+    this.setState({ sheet: null });
+  }
+
+  // ---------------- editor & bulk ----------------
+  openEditor(deckId, cardId) {
+    const c = cardId ? this.cardById(cardId) : null;
+    this.setState({ screen: 'editor', deckId, sheet: null, ed: { cardId: cardId || null, deckId, sentence: c ? c.sentence : '', translation: c ? c.translation : '', transliteration: c ? c.transliteration : '' } });
+  }
+  saveCard() {
+    const ed = this.state.ed;
+    if (!ed) return;
+    const sentence = ed.sentence.trim();
+    if (!sentence) return;
+    const now = Date.now();
+    if (ed.cardId) {
+      this.setState(s => ({
+        cards: s.cards.map(c => {
+          if (c.id !== ed.cardId) return c;
+          const changed = sentence !== c.sentence;
+          return Object.assign({}, c, {
+            sentence, translation: ed.translation.trim(), transliteration: ed.transliteration.trim(), updatedAt: now,
+            streak: changed ? 0 : c.streak, masteredAt: changed ? null : c.masteredAt,
+          });
+        }),
+        screen: 'deck', ed: null,
+      }));
+    } else {
+      const card = { id: this.uuid(), deckId: ed.deckId, sentence, translation: ed.translation.trim(), transliteration: ed.transliteration.trim(), streak: 0, masteredAt: null, createdAt: now, updatedAt: now };
+      this.setState(s => ({ cards: s.cards.concat([card]), screen: 'deck', ed: null }));
+    }
+  }
+  bulkImport() {
+    const b = this.state.bulk;
+    if (!b || !b.preview || !b.preview.valid.length) return;
+    const now = Date.now();
+    const rows = b.preview.valid.map((v, i) => ({ id: this.uuid(), deckId: b.deckId, sentence: v.sentence, translation: v.translation, transliteration: v.transliteration, streak: 0, masteredAt: null, createdAt: now + i, updatedAt: now + i }));
+    const n = rows.length;
+    this.setState(s => ({ cards: s.cards.concat(rows), screen: 'deck', bulk: null }));
+    this.showToast('Added ' + n + (n === 1 ? ' card' : ' cards'));
+  }
+
+  // ---------------- render vals ----------------
+  renderVals() {
+    const s = this.state;
+    const q = (x) => '\u201C' + x + '\u201D';
+    const V = {
+      isHome: s.screen === 'home', isDeck: s.screen === 'deck', isEditor: s.screen === 'editor',
+      isBulk: s.screen === 'bulk', isPractice: s.screen === 'practice',
+      hasToast: !!s.toast, toastMsg: s.toast || '',
+      // practice defaults
+      prIsActive: false, prIsEmpty: false, prIsSummary: false,
+      prProgress: '', prBarW: '0%', prCardAnim: 'none',
+      prHasTranslation: false, prTranslation: '', prHasTranslit: false, prTranslit: '',
+      prDir: 'ltr', prAnswerBorder: '#DDE2EF', prAnswerBg: '#FFFFFF', prAnswerAnim: 'none',
+      placedV: [], prAnswerEmpty: true, poolV: [],
+      prDone: false, prNotDone: true, prDoneCircle: '#DCF2E5', prDoneIcon: '#1F7A55',
+      prDoneTitle: '', prDoneTitleColor: '#1F7A55', prDoneSub: '',
+      prEmptyDeckName: '', sumCompleted: '0', sumCompletedLabel: 'cards completed', sumHasNewly: false, sumNewlyLine: '',
+      onNext: () => this.advance(false), onSkip: () => this.advance(true), onExit: () => this.exitPractice(),
+      onAgain: () => {}, onDoneExit: () => this.exitPractice(), onPracticeAll: () => {}, onResetAllPractice: () => {},
+    };
+
+    // ----- home -----
+    const deckView = (d) => {
+      const empty = this.deckCards(d.id).length === 0;
+      return {
+        id: d.id, name: d.name, countLine: this.countLine(d.id),
+        onOpen: () => this.setState({ screen: 'deck', deckId: d.id }),
+        onPractice: () => this.startSession(d.id, false),
+        practiceDisabled: empty, practiceOpacity: empty ? '0.45' : '1',
+        onMenu: () => this.openSheet('deckMenu', d.id),
+        onToggleRemaining: () => this.updateDeck(d.id, { practiceRemainingOnly: !d.practiceRemainingOnly }),
+        swChecked: d.practiceRemainingOnly,
+        swBg: d.practiceRemainingOnly ? '#3A4A9F' : '#C9D0E4',
+        swX: d.practiceRemainingOnly ? 'translateX(19px)' : 'translateX(0px)',
+      };
+    };
+    V.foldersV = s.folders.map(f => {
+      const decks = s.decks.filter(d => d.folderId === f.id).map(deckView);
+      const open = !s.collapsed[f.id];
+      return {
+        id: f.id, name: f.name, count: String(decks.length), open, isEmpty: decks.length === 0,
+        chev: open ? 'rotate(90deg)' : 'rotate(0deg)',
+        onToggle: () => this.setState(st => { const c2 = Object.assign({}, st.collapsed); c2[f.id] = !c2[f.id]; return { collapsed: c2 }; }),
+        onMenu: () => this.openSheet('folderMenu', f.id),
+        decks,
+      };
+    });
+    V.ungroupedV = s.decks.filter(d => d.folderId == null).map(deckView);
+    V.hasUngrouped = V.ungroupedV.length > 0;
+    V.noDecks = s.decks.length === 0;
+    V.onNewDeck = () => this.openInputModal('newDeck', null, 'New deck', 'Deck name', '', 'Create');
+    V.onNewFolder = () => this.openInputModal('newFolder', null, 'New folder', 'Folder name', '', 'Create');
+
+    // ----- deck screen -----
+    const deck = s.deckId ? this.deckById(s.deckId) : null;
+    V.deckName = deck ? deck.name : '';
+    V.deckCountLine = deck ? this.countLine(deck.id) : '';
+    const dcards = deck ? this.deckCards(deck.id) : [];
+    V.deckCardsV = dcards.map(c => ({
+      id: c.id, sentence: c.sentence, mastered: c.masteredAt != null,
+      onOpen: () => this.openEditor(deck.id, c.id),
+      onMenu: () => this.openSheet('cardMenu', c.id),
+    }));
+    V.deckIsEmpty = !!deck && dcards.length === 0;
+    V.onAddCard = () => this.openEditor(s.deckId, null);
+    V.onBulkAdd = () => this.setState({ screen: 'bulk', bulk: { deckId: s.deckId, text: '', preview: null } });
+    V.onBackHome = () => this.setState({ screen: 'home' });
+
+    // ----- editor -----
+    const ed = s.ed || { cardId: null, sentence: '', translation: '', transliteration: '' };
+    V.edTitle = ed.cardId ? 'Edit card' : 'New card';
+    V.edSentence = ed.sentence; V.edTranslation = ed.translation; V.edTranslit = ed.transliteration;
+    V.onEdSentence = (e) => this.setState({ ed: Object.assign({}, this.state.ed, { sentence: e.target.value }) });
+    V.onEdTranslation = (e) => this.setState({ ed: Object.assign({}, this.state.ed, { translation: e.target.value }) });
+    V.onEdTranslit = (e) => this.setState({ ed: Object.assign({}, this.state.ed, { transliteration: e.target.value }) });
+    V.edSaveDisabled = !ed.sentence.trim();
+    V.edSaveOpacity = V.edSaveDisabled ? '0.45' : '1';
+    V.onEdSave = () => this.saveCard();
+    V.onEdBack = () => this.setState({ screen: 'deck', ed: null });
+
+    // ----- bulk -----
+    const b = s.bulk || { text: '', preview: null };
+    V.bulkText = b.text;
+    V.onBulkText = (e) => this.setState({ bulk: Object.assign({}, this.state.bulk, { text: e.target.value, preview: null }) });
+    V.onBulkPreview = () => this.setState({ bulk: Object.assign({}, this.state.bulk, { preview: this.parseBulk(this.state.bulk.text) }) });
+    V.previewDisabled = !b.text.trim();
+    V.previewOpacity = V.previewDisabled ? '0.45' : '1';
+    V.bulkHasPreview = !!b.preview;
+    const bv = b.preview ? b.preview.valid : [];
+    const be = b.preview ? b.preview.errors : [];
+    V.bulkValid = bv.map((v, i) => ({ k: 'v' + i, sentence: v.sentence, translation: v.translation, transliteration: v.transliteration, hasTr: v.translation !== '', hasTl: v.transliteration !== '' }));
+    V.bulkErrors = be.map((e2, i) => ({ k: 'e' + i, raw: e2.raw, reason: e2.reason }));
+    V.bulkHasValid = bv.length > 0; V.bulkValidCount = String(bv.length);
+    V.bulkHasErrors = be.length > 0; V.bulkErrorCount = String(be.length);
+    V.bulkNothing = !!b.preview && !bv.length && !be.length;
+    V.importLabel = b.preview ? ('Import ' + bv.length + (bv.length === 1 ? ' card' : ' cards')) : 'Import';
+    V.importDisabled = !b.preview || bv.length === 0;
+    V.importOpacity = V.importDisabled ? '0.45' : '1';
+    V.onImport = () => this.bulkImport();
+    V.onBulkBack = () => this.setState({ screen: 'deck', bulk: null });
+
+    // ----- practice header (settings) -----
+    V.ttsOn = s.settings.ttsEnabled;
+    V.onTtsToggle = () => this.setState(st => ({ settings: Object.assign({}, st.settings, { ttsEnabled: !st.settings.ttsEnabled }) }));
+    V.ttsSwBg = s.settings.ttsEnabled ? '#3A4A9F' : '#C9D0E4';
+    V.ttsSwX = s.settings.ttsEnabled ? 'translateX(19px)' : 'translateX(0px)';
+    V.ttsLang = s.settings.ttsLang;
+    V.onTtsLang = (e) => this.setState(st => ({ settings: Object.assign({}, st.settings, { ttsLang: e.target.value }) }));
+
+    // ----- practice session -----
+    const ses = s.session;
+    if (ses && s.screen === 'practice') {
+      V.prIsEmpty = !!ses.empty;
+      V.prIsSummary = !!ses.summary;
+      V.prIsActive = !ses.empty && !ses.summary && !!ses.attempt;
+      const dk = this.deckById(ses.deckId);
+      V.prEmptyDeckName = dk ? dk.name : '';
+      V.onPracticeAll = () => this.startSession(ses.deckId, true);
+      V.onResetAllPractice = () => {
+        const deckId = ses.deckId;
+        this.setState(st => ({ cards: st.cards.map(c => c.deckId === deckId ? Object.assign({}, c, { streak: 0, masteredAt: null }) : c) }), () => this.startSession(deckId, false));
+      };
+      V.onAgain = () => this.startSession(ses.deckId, false);
+      if (ses.summary) {
+        V.prBarW = '100%';
+        V.sumCompleted = String(ses.completed);
+        V.sumCompletedLabel = ses.completed === 1 ? 'card completed' : 'cards completed';
+        V.sumHasNewly = ses.newly > 0;
+        V.sumNewlyLine = '+' + ses.newly + ' newly mastered';
+      }
+      if (ses.attempt) {
+        const at = ses.attempt;
+        const card = this.cardById(at.cardId) || { translation: '', transliteration: '' };
+        const showSpk = s.settings.ttsEnabled;
+        V.prProgress = (ses.index + 1) + ' / ' + ses.queue.length;
+        V.prBarW = Math.round(((ses.index + (at.done ? 1 : 0)) / ses.queue.length) * 100) + '%';
+        V.prCardAnim = 'sbRise ' + (ses.index % 2 === 0 ? '0.32s' : '0.33s') + ' cubic-bezier(.25,.9,.35,1)';
+        V.prHasTranslation = card.translation !== '';
+        V.prTranslation = card.translation;
+        V.prHasTranslit = card.transliteration !== '';
+        V.prTranslit = card.transliteration;
+        V.prDir = at.rtl ? 'rtl' : 'ltr';
+        V.prAnswerEmpty = at.placed === 0;
+        V.prAnswerBorder = at.done ? '#9CCFB4' : '#DDE2EF';
+        V.prAnswerBg = at.done ? '#F3FBF6' : '#FFFFFF';
+        V.prAnswerAnim = at.done ? 'sbGlow .8s ease' : 'none';
+        V.placedV = at.tokens.slice(0, at.placed).map((t, i) => ({
+          k: 'p' + i, text: t, showSpeaker: showSpk,
+          onSpeak: (e) => { e.stopPropagation(); this.speak(t); },
+          bg: at.done ? '#E2F4EA' : '#EDF0FA',
+          border: at.done ? '#BCE0CC' : '#CBD3EE',
+          edge: at.done ? '#9BD1B4' : '#B4BFE8',
+          color: at.done ? '#14573C' : '#26325B',
+        }));
+        V.poolV = at.pool.filter(p => !p.gone).map(p => ({
+          k: p.k, text: p.text, showSpeaker: showSpk,
+          onTap: () => this.tapBlock(p.k),
+          onSpeak: (e) => { e.stopPropagation(); this.speak(p.text); },
+          shakeAnim: p.shake ? 'sbShake .4s ease' : 'none',
+          border: p.shake ? '#E08B86' : '#D5DBEA',
+          edge: p.shake ? '#D2504B' : '#C2CBE2',
+        }));
+        V.prDone = at.done;
+        V.prNotDone = !at.done;
+        if (at.done && at.doneInfo) {
+          const di = at.doneInfo;
+          if (di.newly) {
+            V.prDoneTitle = 'Mastered!'; V.prDoneTitleColor = '#8A6210';
+            V.prDoneCircle = '#FAEFD8'; V.prDoneIcon = '#B07A18';
+            V.prDoneSub = this.th() === 1 ? 'Mastered on a clean run.' : ('That\u2019s ' + this.th() + ' clean runs in a row.');
+          } else if (di.clean && di.mastered) {
+            V.prDoneTitle = 'Correct!'; V.prDoneTitleColor = '#1F7A55';
+            V.prDoneCircle = '#DCF2E5'; V.prDoneIcon = '#1F7A55';
+            V.prDoneSub = 'Clean run.';
+          } else if (di.clean) {
+            V.prDoneTitle = 'Correct!'; V.prDoneTitleColor = '#1F7A55';
+            V.prDoneCircle = '#DCF2E5'; V.prDoneIcon = '#1F7A55';
+            V.prDoneSub = 'Clean run — streak ' + di.streak + ' of ' + this.th() + '.';
+          } else {
+            V.prDoneTitle = 'Completed'; V.prDoneTitleColor = '#46506B';
+            V.prDoneCircle = '#E7EAF3'; V.prDoneIcon = '#6B7590';
+            V.prDoneSub = di.mistakes + (di.mistakes === 1 ? ' mistake' : ' mistakes') + ' — streak reset.';
+          }
+        }
+      }
+    }
+
+    // ----- action sheet -----
+    const sheet = s.sheet;
+    V.sheetOpen = !!sheet;
+    V.onSheetClose = () => this.setState({ sheet: null });
+    let items = []; let title = '';
+    if (sheet && sheet.kind === 'deckMenu') {
+      const d = this.deckById(sheet.id);
+      if (d) {
+        const n = this.deckCards(d.id).length;
+        title = d.name;
+        items = [
+          { label: 'Rename', onTap: () => this.openInputModal('renameDeck', d.id, 'Rename deck', 'Deck name', d.name, 'Save') },
+          { label: 'Move to folder\u2026', onTap: () => this.openSheet('moveDeck', d.id) },
+          { label: 'Reset progress', onTap: () => this.openConfirmModal('resetDeck', d.id, 'Reset progress?', 'Every card in ' + q(d.name) + ' goes back to streak 0 and not mastered.', 'Reset', false) },
+          { label: 'Delete deck', danger: true, onTap: () => this.openConfirmModal('deleteDeck', d.id, 'Delete deck?', q(d.name) + ' and its ' + n + (n === 1 ? ' card' : ' cards') + ' will be deleted. This can\u2019t be undone.', 'Delete', true) },
+        ];
+      }
+    } else if (sheet && sheet.kind === 'folderMenu') {
+      const f = s.folders.find(x => x.id === sheet.id);
+      if (f) {
+        title = f.name;
+        items = [
+          { label: 'Rename', onTap: () => this.openInputModal('renameFolder', f.id, 'Rename folder', 'Folder name', f.name, 'Save') },
+          { label: 'Delete folder', danger: true, onTap: () => this.openConfirmModal('deleteFolder', f.id, 'Delete folder?', q(f.name) + ' will be removed. Its decks move to Ungrouped — no decks or cards are deleted.', 'Delete', true) },
+        ];
+      }
+    } else if (sheet && sheet.kind === 'cardMenu') {
+      const c = this.cardById(sheet.id);
+      if (c) {
+        title = c.sentence;
+        items = [
+          c.masteredAt != null
+            ? { label: 'Mark as not mastered', onTap: () => this.setMastered(c.id, false) }
+            : { label: 'Mark as mastered', onTap: () => this.setMastered(c.id, true) },
+          { label: 'Delete card', danger: true, onTap: () => this.openConfirmModal('deleteCard', c.id, 'Delete card?', 'This can\u2019t be undone.', 'Delete', true) },
+        ];
+      }
+    } else if (sheet && sheet.kind === 'moveDeck') {
+      const d = this.deckById(sheet.id);
+      if (d) {
+        title = 'Move ' + q(d.name) + ' to';
+        items = [{ label: 'Ungrouped', check: d.folderId == null, onTap: () => this.setState(st => ({ decks: st.decks.map(x => x.id === d.id ? Object.assign({}, x, { folderId: null }) : x), sheet: null })) }]
+          .concat(s.folders.map(f => ({ label: f.name, check: d.folderId === f.id, onTap: () => this.setState(st => ({ decks: st.decks.map(x => x.id === d.id ? Object.assign({}, x, { folderId: f.id }) : x), sheet: null })) })));
+      }
+    }
+    V.sheetTitle = title; V.sheetHasTitle = !!title;
+    V.sheetItems = items.map((it, i) => ({ k: 'i' + i, label: it.label, color: it.danger ? '#C4423C' : '#1E2A44', check: !!it.check, onTap: it.onTap }));
+
+    // ----- modal -----
+    const m = s.modal;
+    V.modalOpen = !!m;
+    V.modalTitle = m ? m.title : '';
+    V.modalHasMsg = !!(m && m.msg); V.modalMsg = (m && m.msg) || '';
+    V.modalHasInput = !!(m && m.input);
+    V.modalText = (m && m.text) || '';
+    V.modalPlaceholder = (m && m.placeholder) || '';
+    V.onModalText = (e) => this.setState({ modal: Object.assign({}, this.state.modal, { text: e.target.value }) });
+    V.onModalKey = (e) => { if (e.key === 'Enter') { e.preventDefault(); this.modalConfirm(); } };
+    V.onModalCancel = () => this.setState({ modal: null });
+    V.onModalConfirm = () => this.modalConfirm();
+    V.modalConfirmLabel = m ? m.confirmLabel : 'OK';
+    V.modalConfirmDisabled = !!(m && m.input && !(m.text || '').trim());
+    V.modalConfirmOpacity = V.modalConfirmDisabled ? '0.45' : '1';
+    V.modalConfirmBg = (m && m.danger) ? '#C4423C' : '#3A4A9F';
+
+    return V;
+  }
+}
+</script>
+</body>
+</html>
