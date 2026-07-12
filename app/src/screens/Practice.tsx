@@ -79,6 +79,14 @@ export function Practice({ session, card, deckName, settings, actions }: Practic
   const showSpeaker = settings.ttsEnabled && !covered;
   const skippedLeft = session.history.filter((e) => e.status === 'skipped').length;
 
+  // Scorecard labels (display-only): any wrong tap → Incorrect, else completed →
+  // Correct, else Not attempted. Unreached queue cards have no history entry.
+  const correct = session.history.filter((e) => e.status === 'completed' && e.mistakes === 0).length;
+  const incorrect = session.history.filter((e) => e.mistakes > 0).length;
+  const notAttempted = session.queue.length - correct - incorrect;
+  const attempted = correct + incorrect;
+  const accuracy = attempted > 0 ? Math.round((100 * correct) / attempted) : null;
+
   const barWidth = session.summary
     ? '100%'
     : session.attempt
@@ -90,7 +98,7 @@ export function Practice({ session, card, deckName, settings, actions }: Practic
       <div className="flex items-center gap-[6px] px-3 pt-2 pb-[6px] pl-[10px]">
         <button
           onClick={actions.exitPractice}
-          aria-label="End session"
+          aria-label="Leave practice"
           className="flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[13px] border-none bg-transparent p-0 text-ink active:bg-[#E7EAF3]"
         >
           <CloseIcon size={18} />
@@ -255,6 +263,13 @@ export function Practice({ session, card, deckName, settings, actions }: Practic
                 >
                   Skip
                 </button>
+                <button
+                  onClick={actions.openEndSession}
+                  className="font-display flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-[13px] bg-white px-[14px] text-[14.5px] font-semibold text-[#2B3A7E] hover:bg-[#F7F9FD] active:translate-y-px"
+                  style={{ border: '1.5px solid #D5DBEA' }}
+                >
+                  End session
+                </button>
               </>
             )}
           </div>
@@ -286,7 +301,9 @@ export function Practice({ session, card, deckName, settings, actions }: Practic
       {showSummary && (
         <>
           <div className="flex flex-1 flex-col items-center justify-center px-7 pt-6 pb-5 text-center" style={{ animation: 'sbRise .3s ease' }}>
-            <div className="font-display text-[11.5px] leading-none font-bold tracking-[.11em] text-muted-2 uppercase">Session complete</div>
+            <div className="font-display text-[11.5px] leading-none font-bold tracking-[.11em] text-muted-2 uppercase">
+              {session.endedEarly ? 'Session ended' : 'Session complete'}
+            </div>
             <div className="font-display mt-4 text-[56px] leading-none font-extrabold tracking-[-.02em] text-ink">{session.completed}</div>
             <div className="font-display mt-[7px] text-sm leading-[1.3] font-medium text-muted">
               {session.completed === 1 ? 'card completed' : 'cards completed'}
@@ -298,6 +315,26 @@ export function Practice({ session, card, deckName, settings, actions }: Practic
               >
                 +{session.newly} newly mastered
               </span>
+            )}
+            <div className="mt-[18px] w-full max-w-[260px] rounded-[16px] bg-white px-[16px] py-[6px]" style={{ border: '1.5px solid #E3E7F0' }}>
+              {[
+                { label: 'Correct', value: correct, color: '#1F7A55' },
+                { label: 'Incorrect', value: incorrect, color: '#C4423C' },
+                { label: 'Not attempted', value: notAttempted, color: '#6B7590' },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between gap-3 py-[7px]">
+                  <span className="font-display text-[13.5px] leading-[1.3] font-semibold" style={{ color: row.color }}>
+                    {row.label}
+                  </span>
+                  <span className="font-display text-[15px] leading-none font-bold text-ink">{row.value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="font-display mt-[10px] text-[12.5px] leading-[1.4] font-medium text-muted">
+              Attempted: {attempted} of {session.queue.length}
+            </div>
+            {accuracy != null && (
+              <div className="font-display mt-[3px] text-[12.5px] leading-[1.4] font-medium text-muted">Accuracy: {accuracy}%</div>
             )}
             {skippedLeft > 0 && (
               <button

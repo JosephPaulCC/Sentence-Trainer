@@ -48,6 +48,13 @@ export interface Attempt {
 export interface HistoryEntry {
   cardId: ID;
   status: 'completed' | 'skipped';
+  /**
+   * Wrong word-block taps committed for this card this session: the live
+   * attempt's count, plus any completed review attempt's. Abandoned review
+   * partials stay forgotten (their taps discard with the attempt).
+   * Display-only — never feeds mastery/streak logic.
+   */
+  mistakes: number;
 }
 
 export interface ReviewState {
@@ -68,6 +75,8 @@ export interface Session {
   attempt: Attempt | null;
   history: HistoryEntry[];
   review: ReviewState | null;
+  /** True when the user submitted via "End session" instead of finishing the queue. */
+  endedEarly: boolean;
 }
 
 export interface EditorDraft {
@@ -99,7 +108,8 @@ export type ModalKind =
   | 'resetDeck'
   | 'deleteDeck'
   | 'deleteFolder'
-  | 'deleteCard';
+  | 'deleteCard'
+  | 'endSession';
 
 export interface ModalState {
   kind: ModalKind;
@@ -109,6 +119,7 @@ export interface ModalState {
   placeholder?: string;
   text?: string;
   confirmLabel: string;
+  cancelLabel?: string;
   input: boolean;
   danger: boolean;
 }
@@ -342,6 +353,20 @@ export function useSentenceBuilder() {
           };
         case 'deleteCard':
           return { cards: s.cards.filter((c) => c.id !== m.id), modal: null };
+        case 'endSession': {
+          const ses = s.session;
+          if (!ses || ses.summary || ses.empty) return { modal: null };
+          clearTimeout(advTimer.current);
+          interruptAutoRead();
+          cancelSpeech();
+          // The on-screen card follows the same end-state rules: its partial
+          // progress is discarded, only its wrong-tap count is kept.
+          const at = ses.attempt;
+          const history = at
+            ? ses.history.concat([{ cardId: at.cardId, status: at.done ? ('completed' as const) : ('skipped' as const), mistakes: at.mistakes }])
+            : ses.history;
+          return { modal: null, session: { ...ses, history, summary: true, attempt: null, review: null, endedEarly: true } };
+        }
         default:
           return { modal: null };
       }
@@ -556,7 +581,7 @@ export function useSentenceBuilder() {
           deckId,
           sheet: null,
           modal: null,
-          session: { deckId, empty: true, summary: false, queue: [], index: 0, completed: 0, newly: 0, attempt: null, history: [], review: null },
+          session: { deckId, empty: true, summary: false, queue: [], index: 0, completed: 0, newly: 0, attempt: null, history: [], review: null, endedEarly: false },
         };
       }
       const queue = shuffle(pool.map((c) => c.id));
@@ -578,6 +603,7 @@ export function useSentenceBuilder() {
           attempt: buildAttempt(first, s.settings.revealBlocksOnTap),
           history: [],
           review: null,
+          endedEarly: false,
         },
       };
     });
@@ -595,7 +621,7 @@ export function useSentenceBuilder() {
       if (!force && ses.attempt && !ses.attempt.done) return null;
       const at = ses.attempt;
       const history = at
-        ? ses.history.concat([{ cardId: at.cardId, status: at.done ? ('completed' as const) : ('skipped' as const) }])
+        ? ses.history.concat([{ cardId: at.cardId, status: at.done ? ('completed' as const) : ('skipped' as const), mistakes: at.mistakes }])
         : ses.history;
       const next = ses.index + 1;
       if (next >= ses.queue.length) {
@@ -644,6 +670,27 @@ export function useSentenceBuilder() {
     interruptAutoRead();
     update((s) => (s.session?.review ? { session: { ...s.session, review: null } } : null));
   }
+  /** "End session" button: confirm dialog before submitting for the scorecard. */
+  function openEndSession() {
+    update((s) => {
+      const ses = s.session;
+      if (!ses || ses.summary || ses.empty) return null;
+      const remaining = ses.queue.length - ses.completed;
+      return {
+        modal: {
+          kind: 'endSession' as const,
+          id: null,
+          title: 'End session?',
+          msg: `${remaining} of ${ses.queue.length} cards not yet completed.`,
+          confirmLabel: 'End & view results',
+          cancelLabel: 'Keep practicing',
+          input: false,
+          danger: false,
+        },
+      };
+    });
+  }
+
   /** Summary's "Review skipped (N)": opens review at the earliest skipped entry. */
   function reviewSkipped() {
     update((s) => {
@@ -692,7 +739,9 @@ export function useSentenceBuilder() {
                 ...ses,
                 ...counted,
                 review: { ...review, attempt },
-                history: ses.history.map((e, i) => (i === review.pos ? { ...e, status: 'completed' as const } : e)),
+                history: ses.history.map((e, i) =>
+                  i === review.pos ? { ...e, status: 'completed' as const, mistakes: e.mistakes + at.mistakes } : e,
+                ),
               },
             };
           }
@@ -765,6 +814,7 @@ export function useSentenceBuilder() {
       resetAndRestart,
       advance,
       tapBlock,
+      openEndSession,
       reviewBack,
       reviewForward,
       reviewReturn,

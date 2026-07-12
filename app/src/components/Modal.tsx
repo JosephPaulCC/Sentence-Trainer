@@ -6,6 +6,7 @@ interface ModalProps {
   text?: string;
   placeholder?: string;
   confirmLabel: string;
+  cancelLabel?: string;
   confirmDisabled: boolean;
   danger: boolean;
   onTextChange: (v: string) => void;
@@ -21,6 +22,7 @@ export function Modal({
   text,
   placeholder,
   confirmLabel,
+  cancelLabel,
   confirmDisabled,
   danger,
   onTextChange,
@@ -65,7 +67,7 @@ export function Modal({
             className="font-display flex min-h-[46px] flex-1 cursor-pointer items-center justify-center rounded-[13px] bg-white px-[14px] text-[14.5px] font-semibold text-[#2B3A7E] hover:bg-[#F7F9FD] active:translate-y-px"
             style={{ border: '1.5px solid #D5DBEA' }}
           >
-            Cancel
+            {cancelLabel ?? 'Cancel'}
           </button>
           <button
             onClick={onConfirm}

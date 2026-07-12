@@ -157,6 +157,7 @@ function App() {
         text={modal?.text}
         placeholder={modal?.placeholder}
         confirmLabel={modal?.confirmLabel ?? 'OK'}
+        cancelLabel={modal?.cancelLabel}
         confirmDisabled={!!modal && modal.input && !(modal.text ?? '').trim()}
         danger={!!modal?.danger}
         onTextChange={actions.modalTextChange}
