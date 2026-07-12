@@ -24,12 +24,20 @@ function isValid(data: unknown): data is AppData {
 }
 
 /**
- * Additive migration: older payloads lack the newer settings fields, and may
- * carry a ttsLang code that no longer exists in the selector (e.g. `en-IN`).
- * Everything else is passed through untouched.
+ * Settings normalization: only known keys are kept (legacy ones like the old
+ * `autoReadOnComplete` flag are dropped silently), the two old TTS booleans
+ * collapse into one (`ttsEnabled` = either was true), missing fields get
+ * defaults, and a ttsLang code no longer in the selector (e.g. `en-IN`)
+ * remaps to `en-US`. Folders/decks/cards pass through untouched.
  */
 export function migrate(data: AppData): AppData {
-  const settings: Settings = { ...DEFAULT_SETTINGS, ...data.settings };
+  const raw = (data.settings ?? {}) as unknown as Record<string, unknown>;
+  const settings: Settings = {
+    ttsEnabled: raw.ttsEnabled === true || raw.autoReadOnComplete === true,
+    ttsLang: typeof raw.ttsLang === 'string' ? raw.ttsLang : DEFAULT_SETTINGS.ttsLang,
+    hideTransliteration: raw.hideTransliteration === true,
+    revealBlocksOnTap: raw.revealBlocksOnTap === true,
+  };
   if (!LANGUAGES.some((l) => l.code === settings.ttsLang)) {
     settings.ttsLang = 'en-US';
   }

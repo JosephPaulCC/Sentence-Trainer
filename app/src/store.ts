@@ -287,7 +287,10 @@ export function useSentenceBuilder() {
   function warnOnce(key: string, msg: string) {
     if (warnedRef.current[key]) return;
     warnedRef.current[key] = true;
-    update({ toast: msg });
+    // Deferred: warnOnce can fire from inside a setState updater (speech is a
+    // side effect of tap handling), and a nested render-phase dispatch can be
+    // lost when React re-evaluates the updater. A macrotask dispatch always lands.
+    setTimeout(() => update({ toast: msg }), 0);
   }
 
   // ---------------- folders & decks ----------------
@@ -477,13 +480,17 @@ export function useSentenceBuilder() {
 
   // ---------------- practice settings ----------------
   function toggleTts() {
-    update((s) => ({ settings: { ...s.settings, ttsEnabled: !s.settings.ttsEnabled } }));
+    update((s) => {
+      const on = !s.settings.ttsEnabled;
+      // Turning TTS off mid-utterance stops speech immediately. A cancelled
+      // completion sentence still fires onend, which drives the pending
+      // advance on its normal end-of-speech timing (8s cap as backstop).
+      if (!on) cancelSpeech();
+      return { settings: { ...s.settings, ttsEnabled: on } };
+    });
   }
   function setTtsLang(lang: string) {
     update((s) => ({ settings: { ...s.settings, ttsLang: lang } }));
-  }
-  function toggleAutoRead() {
-    update((s) => ({ settings: { ...s.settings, autoReadOnComplete: !s.settings.autoReadOnComplete } }));
   }
   function toggleHideTransliteration() {
     update((s) => ({ settings: { ...s.settings, hideTransliteration: !s.settings.hideTransliteration } }));
@@ -515,12 +522,17 @@ export function useSentenceBuilder() {
       return { session: { ...ses, attempt: { ...ses.attempt, covered: false } } };
     });
   }
-  function speakBlock(text: string) {
-    const langCode = state.settings.ttsLang;
+  /** Cancels anything in flight, speaks `text`, and surfaces voice warnings once. */
+  function speakText(text: string, langCode: string) {
     const voices = voicesRef.current.length ? voicesRef.current : getVoices();
     const result = ttsSpeak(text, langCode, voices);
     const warning = speakWarning(result, langCode);
     if (warning) warnOnce(warning.key, warning.msg);
+  }
+  /** Answer-row tap-to-speak. Placed blocks are only interactive while TTS is on. */
+  function speakBlock(text: string) {
+    if (!state.settings.ttsEnabled) return;
+    speakText(text, state.settings.ttsLang);
   }
 
   // ---------------- auto-read on completion (Feature A) ----------------
@@ -532,14 +544,14 @@ export function useSentenceBuilder() {
   }
   /**
    * Runs the post-completion pause: plain AUTO_ADVANCE_MS delay, or — when
-   * auto-read is on and a voice exists — speak the sentence and proceed on
+   * TTS is on and a voice exists — speak the whole sentence and proceed on
    * end/error + AUTO_READ_TAIL_MS, hard-capped at AUTO_READ_CAP_MS so a
    * missing onend (Android Chrome) can never hang the session.
    */
   function scheduleCompletionAdvance(settings: Settings, sentence: string, inReview: boolean) {
     const proceed = inReview ? reviewReturn : () => advance(false);
     clearTimeout(advTimer.current);
-    if (!settings.autoReadOnComplete) {
+    if (!settings.ttsEnabled) {
       advTimer.current = setTimeout(proceed, AUTO_ADVANCE_MS);
       return;
     }
@@ -619,6 +631,7 @@ export function useSentenceBuilder() {
       const ses = s.session;
       if (!ses || ses.summary || ses.empty || ses.review) return null;
       if (!force && ses.attempt && !ses.attempt.done) return null;
+      cancelSpeech(); // leaving the card — word speech must not bleed into the next one
       const at = ses.attempt;
       const history = at
         ? ses.history.concat([{ cardId: at.cardId, status: at.done ? ('completed' as const) : ('skipped' as const), mistakes: at.mistakes }])
@@ -650,6 +663,7 @@ export function useSentenceBuilder() {
     update((s) => {
       const ses = s.session;
       if (!ses || !ses.history.length || inCompletionTransition(ses)) return null;
+      cancelSpeech();
       const pos = ses.review ? ses.review.pos - 1 : ses.history.length - 1;
       return openReviewAt(s, pos);
     });
@@ -658,6 +672,7 @@ export function useSentenceBuilder() {
     update((s) => {
       const ses = s.session;
       if (!ses || !ses.review || inCompletionTransition(ses)) return null;
+      cancelSpeech();
       if (ses.review.pos >= ses.history.length - 1) {
         return { session: { ...ses, review: null } };
       }
@@ -668,6 +683,7 @@ export function useSentenceBuilder() {
   function reviewReturn() {
     clearTimeout(advTimer.current);
     interruptAutoRead();
+    cancelSpeech();
     update((s) => (s.session?.review ? { session: { ...s.session, review: null } } : null));
   }
   /** "End session" button: confirm dialog before submitting for the scorecard. */
@@ -747,6 +763,9 @@ export function useSentenceBuilder() {
           }
           return { cards, session: { ...ses, ...counted, attempt } };
         }
+        // Correct non-final placement: speak the word. The final word is left
+        // to the whole-sentence read on completion, so it isn't heard twice.
+        if (s.settings.ttsEnabled) speakText(block.text, s.settings.ttsLang);
         return { session: withAttempt(ses, { ...at, placed, pool }) };
       }
       if (navigator.vibrate) {
@@ -805,7 +824,6 @@ export function useSentenceBuilder() {
       bulkImport,
       toggleTts,
       setTtsLang,
-      toggleAutoRead,
       toggleHideTransliteration,
       toggleRevealBlocks,
       revealBlocks,

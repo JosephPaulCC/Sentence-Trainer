@@ -123,12 +123,3 @@ export function GearIcon({ size = 19, color = 'currentColor', className }: IconP
   );
 }
 
-export function SpeakerIcon({ size = 16, color = '#6B7590', big = false }: IconProps & { big?: boolean }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <path d="M4 9.5v5h3.2L12 18.7V5.3L7.2 9.5H4z" fill={color} />
-      <path d="M15.5 8.7a4.6 4.6 0 0 1 0 6.6" stroke={color} strokeWidth="1.9" fill="none" strokeLinecap="round" />
-      {big && <path d="M18 6.4a8 8 0 0 1 0 11.2" stroke={color} strokeWidth="1.9" fill="none" strokeLinecap="round" />}
-    </svg>
-  );
-}

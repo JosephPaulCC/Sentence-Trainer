@@ -46,9 +46,6 @@ export function PracticeSettingsSheet({ open, settings, actions, onClose }: Prac
         <div className="mx-auto mt-1 mb-2 h-1 w-9 rounded-full" style={{ background: '#E3E7F0' }} />
         <div className="font-display px-3 pt-1 pb-2 text-[13px] leading-[1.35] font-bold text-muted">Practice settings</div>
 
-        <Row label="Word speakers" hint="Speaker button on every word block">
-          <Switch checked={settings.ttsEnabled} onChange={actions.toggleTts} label="Word speakers" />
-        </Row>
         <Row label="Speech language">
           <select
             aria-label="Speech language"
@@ -63,9 +60,6 @@ export function PracticeSettingsSheet({ open, settings, actions, onClose }: Prac
               </option>
             ))}
           </select>
-        </Row>
-        <Row label="Auto-read sentence" hint="Read the sentence aloud when a card is completed">
-          <Switch checked={settings.autoReadOnComplete} onChange={actions.toggleAutoRead} label="Auto-read sentence" />
         </Row>
         <Row label="Hide transliteration" hint="Practice from the translation alone">
           <Switch checked={settings.hideTransliteration} onChange={actions.toggleHideTransliteration} label="Hide transliteration" />

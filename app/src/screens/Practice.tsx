@@ -5,6 +5,7 @@ import { inCompletionTransition } from '../store';
 import { MASTERY_THRESHOLD } from '../types';
 import { BackIcon, CloseIcon, ForwardIcon, GearIcon } from '../components/Icons';
 import { PracticeSettingsSheet } from '../components/PracticeSettingsSheet';
+import { Switch } from '../components/Switch';
 import { PlacedWord, PoolWord } from '../components/WordBlock';
 
 interface PracticeProps {
@@ -76,7 +77,6 @@ export function Practice({ session, card, deckName, settings, actions }: Practic
   const showSummary = session.summary && !review;
   const transitioning = !!attempt && inCompletionTransition(session);
   const covered = !!attempt?.covered;
-  const showSpeaker = settings.ttsEnabled && !covered;
   const skippedLeft = session.history.filter((e) => e.status === 'skipped').length;
 
   // Scorecard labels (display-only): any wrong tap → Incorrect, else completed →
@@ -118,13 +118,19 @@ export function Practice({ session, card, deckName, settings, actions }: Practic
         )}
         <span className="flex-1" />
         {!session.empty && (
-          <button
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Practice settings"
-            className="flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[13px] border-none bg-transparent p-0 text-ink active:bg-[#E7EAF3]"
-          >
-            <GearIcon size={19} />
-          </button>
+          <>
+            <span className="flex flex-none items-center">
+              <span className="font-display text-[12.5px] leading-none font-semibold text-muted">TTS</span>
+              <Switch checked={settings.ttsEnabled} onChange={actions.toggleTts} label="TTS" />
+            </span>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Practice settings"
+              className="flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[13px] border-none bg-transparent p-0 text-ink active:bg-[#E7EAF3]"
+            >
+              <GearIcon size={19} />
+            </button>
+          </>
         )}
       </div>
 
@@ -174,7 +180,7 @@ export function Practice({ session, card, deckName, settings, actions }: Practic
                     }}
                   >
                     {attempt.tokens.slice(0, attempt.placed).map((t, i) => (
-                      <PlacedWord key={i} text={t} done={attempt.done} showSpeaker={showSpeaker} onSpeak={() => actions.speakBlock(t)} />
+                      <PlacedWord key={i} text={t} done={attempt.done} onSpeak={settings.ttsEnabled ? () => actions.speakBlock(t) : null} />
                     ))}
                     {attempt.placed === 0 && (
                       <span className="font-display px-[6px] py-[15px] text-[13.5px] leading-[1.4] font-medium text-[#A9B1C7]">
@@ -211,14 +217,7 @@ export function Practice({ session, card, deckName, settings, actions }: Practic
                     {attempt.pool
                       .filter((p) => !p.gone)
                       .map((p) => (
-                        <PoolWord
-                          key={p.k}
-                          text={p.text}
-                          shake={p.shake}
-                          showSpeaker={showSpeaker}
-                          onTap={() => actions.tapBlock(p.k)}
-                          onSpeak={() => actions.speakBlock(p.text)}
-                        />
+                        <PoolWord key={p.k} text={p.text} shake={p.shake} onTap={() => actions.tapBlock(p.k)} />
                       ))}
                   </div>
                 </>

@@ -45,16 +45,43 @@ afterEach(() => {
 });
 
 describe('storage migration', () => {
-  it('loads legacy data intact, with the three new toggles defaulting to false', () => {
+  it('loads legacy data intact, with missing toggles defaulting to false', () => {
     ls.setItem(STORAGE_KEY, JSON.stringify(legacyData));
     const data = load();
     expect(data.folders).toEqual(legacyData.folders);
     expect(data.decks).toEqual(legacyData.decks);
     expect(data.cards).toEqual(legacyData.cards);
     expect(data.settings.ttsEnabled).toBe(true);
-    expect(data.settings.autoReadOnComplete).toBe(false);
     expect(data.settings.hideTransliteration).toBe(false);
     expect(data.settings.revealBlocksOnTap).toBe(false);
+  });
+
+  it('collapses the two old TTS booleans into one: either true → true', () => {
+    const cases: Array<[{ ttsEnabled?: boolean; autoReadOnComplete?: boolean }, boolean]> = [
+      [{ ttsEnabled: false, autoReadOnComplete: true }, true],
+      [{ ttsEnabled: true, autoReadOnComplete: false }, true],
+      [{ ttsEnabled: true, autoReadOnComplete: true }, true],
+      [{ ttsEnabled: false, autoReadOnComplete: false }, false],
+      [{}, false],
+    ];
+    for (const [old, expected] of cases) {
+      const migrated = migrate({ ...legacyData, settings: { ttsLang: 'hi-IN', ...old } } as never);
+      expect(migrated.settings.ttsEnabled).toBe(expected);
+    }
+  });
+
+  it('drops unknown/legacy settings keys silently', () => {
+    const migrated = migrate({
+      ...legacyData,
+      settings: { ttsEnabled: false, autoReadOnComplete: true, ttsLang: 'hi-IN', bogus: 42 },
+    } as never);
+    expect(migrated.settings).toEqual({
+      ttsEnabled: true,
+      ttsLang: 'hi-IN',
+      hideTransliteration: false,
+      revealBlocksOnTap: false,
+    });
+    expect('autoReadOnComplete' in migrated.settings).toBe(false);
   });
 
   it('remaps the removed en-IN code to en-US and persists under the same key', () => {
@@ -77,6 +104,5 @@ describe('storage migration', () => {
       settings: { ...legacyData.settings, ttsLang: 'hi-IN', hideTransliteration: true },
     } as never);
     expect(migrated.settings.hideTransliteration).toBe(true);
-    expect(migrated.settings.autoReadOnComplete).toBe(false);
   });
 });

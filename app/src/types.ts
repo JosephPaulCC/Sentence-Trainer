@@ -27,9 +27,9 @@ export interface Card {
 }
 
 export interface Settings {
+  /** Single TTS switch: word read-aloud on correct taps + sentence read on completion. */
   ttsEnabled: boolean;
   ttsLang: string;
-  autoReadOnComplete: boolean;
   hideTransliteration: boolean;
   revealBlocksOnTap: boolean;
 }
@@ -52,7 +52,6 @@ export const DEFAULT_TTS_LANG = 'hi-IN';
 export const DEFAULT_SETTINGS: Settings = {
   ttsEnabled: false,
   ttsLang: DEFAULT_TTS_LANG,
-  autoReadOnComplete: false,
   hideTransliteration: false,
   revealBlocksOnTap: false,
 };
