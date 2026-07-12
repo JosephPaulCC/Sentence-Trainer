@@ -1,4 +1,5 @@
-import { STORAGE_KEY, type AppData } from './types';
+import { STORAGE_KEY, DEFAULT_SETTINGS, type AppData, type Settings } from './types';
+import { LANGUAGES } from './tts';
 
 function freshDefaults(): AppData {
   return {
@@ -6,7 +7,7 @@ function freshDefaults(): AppData {
     folders: [],
     decks: [],
     cards: [],
-    settings: { ttsEnabled: false, ttsLang: 'hi-IN' },
+    settings: { ...DEFAULT_SETTINGS },
   };
 }
 
@@ -22,6 +23,19 @@ function isValid(data: unknown): data is AppData {
   );
 }
 
+/**
+ * Additive migration: older payloads lack the newer settings fields, and may
+ * carry a ttsLang code that no longer exists in the selector (e.g. `en-IN`).
+ * Everything else is passed through untouched.
+ */
+export function migrate(data: AppData): AppData {
+  const settings: Settings = { ...DEFAULT_SETTINGS, ...data.settings };
+  if (!LANGUAGES.some((l) => l.code === settings.ttsLang)) {
+    settings.ttsLang = 'en-US';
+  }
+  return { ...data, version: 1, settings };
+}
+
 /** Loads persisted state. Missing key or corrupt JSON never crashes the app. */
 export function load(): AppData {
   let raw: string | null;
@@ -34,7 +48,9 @@ export function load(): AppData {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!isValid(parsed)) throw new Error('malformed sentence-builder state');
-    return parsed;
+    const migrated = migrate(parsed);
+    save(migrated);
+    return migrated;
   } catch {
     try {
       window.localStorage.setItem(`${STORAGE_KEY}:corrupt`, raw);

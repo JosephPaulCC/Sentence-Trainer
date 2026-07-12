@@ -133,15 +133,20 @@ function App() {
       {state.screen === 'bulk' && state.bulk && (
         <BulkAdd bulk={state.bulk} deckName={state.decks.find((d) => d.id === state.bulk!.deckId)?.name ?? ''} actions={actions} />
       )}
-      {state.screen === 'practice' && state.session && (
-        <Practice
-          session={state.session}
-          card={state.session.attempt ? (state.cards.find((c) => c.id === state.session!.attempt!.cardId) ?? null) : null}
-          deckName={state.decks.find((d) => d.id === state.session!.deckId)?.name ?? ''}
-          settings={state.settings}
-          actions={actions}
-        />
-      )}
+      {state.screen === 'practice' &&
+        state.session &&
+        (() => {
+          const attempt = state.session.review ? state.session.review.attempt : state.session.attempt;
+          return (
+            <Practice
+              session={state.session}
+              card={attempt ? (state.cards.find((c) => c.id === attempt.cardId) ?? null) : null}
+              deckName={state.decks.find((d) => d.id === state.session!.deckId)?.name ?? ''}
+              settings={state.settings}
+              actions={actions}
+            />
+          );
+        })()}
 
       <ActionSheet open={!!sheetContent} title={sheetContent?.title} items={sheetContent?.items ?? []} onClose={actions.closeSheet} />
       <Modal

@@ -7,11 +7,13 @@ import {
   type Settings,
   MASTERY_THRESHOLD,
   AUTO_ADVANCE_MS,
+  AUTO_READ_TAIL_MS,
+  AUTO_READ_CAP_MS,
 } from './types';
 import * as storage from './storage';
 import { tokenize, isRtl } from './tokenize';
 import { parseBulk, type BulkParseResult } from './bulkParse';
-import { speak as ttsSpeak, getVoices, subscribeVoicesChanged, cancelSpeech, languageLabel } from './tts';
+import { speak as ttsSpeak, getVoices, subscribeVoicesChanged, cancelSpeech, speakWarning } from './tts';
 
 export interface PoolBlock {
   k: string;
@@ -37,7 +39,22 @@ export interface Attempt {
   mistakes: number;
   done: boolean;
   doneInfo: CompletionResult | null;
+  /** Feature C: blocks concealed until the learner taps to reveal. */
+  covered: boolean;
   rtl: boolean;
+}
+
+/** A card the session has moved past, in order. Session-only — never persisted. */
+export interface HistoryEntry {
+  cardId: ID;
+  status: 'completed' | 'skipped';
+}
+
+export interface ReviewState {
+  /** Index into Session.history. */
+  pos: number;
+  /** Read-only display for completed entries; a fresh attempt for skipped ones. */
+  attempt: Attempt;
 }
 
 export interface Session {
@@ -49,6 +66,8 @@ export interface Session {
   completed: number;
   newly: number;
   attempt: Attempt | null;
+  history: HistoryEntry[];
+  review: ReviewState | null;
 }
 
 export interface EditorDraft {
@@ -126,7 +145,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function buildAttempt(card: Card): Attempt {
+function buildAttempt(card: Card, covered: boolean): Attempt {
   const tokens = tokenize(card.sentence);
   let order = shuffle(tokens.map((_, i) => i));
   if (new Set(tokens).size > 1) {
@@ -145,8 +164,31 @@ function buildAttempt(card: Card): Attempt {
     mistakes: 0,
     done: false,
     doneInfo: null,
+    covered,
     rtl: isRtl(card.sentence),
   };
+}
+
+/** Read-only review display for an already-completed card: assembled answer, empty pool. */
+function buildCompletedDisplay(card: Card): Attempt {
+  const tokens = tokenize(card.sentence);
+  return {
+    cardId: card.id,
+    tokens,
+    pool: [],
+    placed: tokens.length,
+    mistakes: 0,
+    done: true,
+    doneInfo: null,
+    covered: false,
+    rtl: isRtl(card.sentence),
+  };
+}
+
+/** True while a just-completed card's success state is on screen (nav stays inert). */
+export function inCompletionTransition(ses: Session): boolean {
+  const at = ses.review ? ses.review.attempt : ses.attempt;
+  return !!at && at.done && at.doneInfo != null;
 }
 
 function computeCompletion(card: Card | undefined, mistakes: number): CompletionResult {
@@ -190,6 +232,10 @@ export function useSentenceBuilder() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const warnedRef = useRef<Record<string, boolean>>({});
+  // Auto-read bookkeeping: seq invalidates stale onend/onerror callbacks
+  // (cancel() fires them asynchronously), active gates cancel-on-interrupt.
+  const autoReadSeq = useRef(0);
+  const autoReadActive = useRef(false);
 
   function update(patch: Patch | ((s: State) => Patch)) {
     setState((prev) => {
@@ -404,27 +450,95 @@ export function useSentenceBuilder() {
     });
   }
 
-  // ---------------- TTS settings ----------------
+  // ---------------- practice settings ----------------
   function toggleTts() {
     update((s) => ({ settings: { ...s.settings, ttsEnabled: !s.settings.ttsEnabled } }));
   }
   function setTtsLang(lang: string) {
     update((s) => ({ settings: { ...s.settings, ttsLang: lang } }));
   }
+  function toggleAutoRead() {
+    update((s) => ({ settings: { ...s.settings, autoReadOnComplete: !s.settings.autoReadOnComplete } }));
+  }
+  function toggleHideTransliteration() {
+    update((s) => ({ settings: { ...s.settings, hideTransliteration: !s.settings.hideTransliteration } }));
+  }
+  function toggleRevealBlocks() {
+    update((s) => {
+      const on = !s.settings.revealBlocksOnTap;
+      let session = s.session;
+      // OFF reveals immediately; ON only affects cards built from now on.
+      if (!on && session) {
+        const attempt = session.attempt?.covered ? { ...session.attempt, covered: false } : session.attempt;
+        const review = session.review?.attempt.covered
+          ? { ...session.review, attempt: { ...session.review.attempt, covered: false } }
+          : session.review;
+        session = { ...session, attempt, review };
+      }
+      return { settings: { ...s.settings, revealBlocksOnTap: on }, session };
+    });
+  }
+  function revealBlocks() {
+    update((s) => {
+      const ses = s.session;
+      if (!ses) return null;
+      if (ses.review) {
+        if (!ses.review.attempt.covered) return null;
+        return { session: { ...ses, review: { ...ses.review, attempt: { ...ses.review.attempt, covered: false } } } };
+      }
+      if (!ses.attempt?.covered) return null;
+      return { session: { ...ses, attempt: { ...ses.attempt, covered: false } } };
+    });
+  }
   function speakBlock(text: string) {
     const langCode = state.settings.ttsLang;
     const voices = voicesRef.current.length ? voicesRef.current : getVoices();
     const result = ttsSpeak(text, langCode, voices);
-    if (!result.available) {
-      warnOnce('nosynth', 'Speech is not available in this browser.');
+    const warning = speakWarning(result, langCode);
+    if (warning) warnOnce(warning.key, warning.msg);
+  }
+
+  // ---------------- auto-read on completion (Feature A) ----------------
+  function interruptAutoRead() {
+    if (!autoReadActive.current) return;
+    autoReadActive.current = false;
+    autoReadSeq.current++;
+    cancelSpeech();
+  }
+  /**
+   * Runs the post-completion pause: plain AUTO_ADVANCE_MS delay, or — when
+   * auto-read is on and a voice exists — speak the sentence and proceed on
+   * end/error + AUTO_READ_TAIL_MS, hard-capped at AUTO_READ_CAP_MS so a
+   * missing onend (Android Chrome) can never hang the session.
+   */
+  function scheduleCompletionAdvance(settings: Settings, sentence: string, inReview: boolean) {
+    const proceed = inReview ? reviewReturn : () => advance(false);
+    clearTimeout(advTimer.current);
+    if (!settings.autoReadOnComplete) {
+      advTimer.current = setTimeout(proceed, AUTO_ADVANCE_MS);
       return;
     }
-    if (!result.matchedVoice) {
-      warnOnce(
-        langCode,
-        `No ${languageLabel(langCode)} voice on this device — install it in Android Settings → Text-to-speech (Speech Services by Google).`,
-      );
+    const seq = ++autoReadSeq.current;
+    const voices = voicesRef.current.length ? voicesRef.current : getVoices();
+    const result = ttsSpeak(sentence, settings.ttsLang, voices, () => {
+      if (autoReadSeq.current !== seq || !autoReadActive.current) return;
+      autoReadActive.current = false;
+      clearTimeout(advTimer.current);
+      advTimer.current = setTimeout(proceed, AUTO_READ_TAIL_MS);
+    });
+    const warning = speakWarning(result, settings.ttsLang);
+    if (warning) warnOnce(warning.key, warning.msg);
+    if (!result.available || !result.matchedVoice) {
+      advTimer.current = setTimeout(proceed, AUTO_ADVANCE_MS);
+      return;
     }
+    autoReadActive.current = true;
+    advTimer.current = setTimeout(() => {
+      autoReadActive.current = false;
+      autoReadSeq.current++;
+      cancelSpeech();
+      proceed();
+    }, AUTO_READ_CAP_MS);
   }
 
   // ---------------- practice session ----------------
@@ -442,7 +556,7 @@ export function useSentenceBuilder() {
           deckId,
           sheet: null,
           modal: null,
-          session: { deckId, empty: true, summary: false, queue: [], index: 0, completed: 0, newly: 0, attempt: null },
+          session: { deckId, empty: true, summary: false, queue: [], index: 0, completed: 0, newly: 0, attempt: null, history: [], review: null },
         };
       }
       const queue = shuffle(pool.map((c) => c.id));
@@ -453,7 +567,18 @@ export function useSentenceBuilder() {
         deckId,
         sheet: null,
         modal: null,
-        session: { deckId, empty: false, summary: false, queue, index: 0, completed: 0, newly: 0, attempt: buildAttempt(first) },
+        session: {
+          deckId,
+          empty: false,
+          summary: false,
+          queue,
+          index: 0,
+          completed: 0,
+          newly: 0,
+          attempt: buildAttempt(first, s.settings.revealBlocksOnTap),
+          history: [],
+          review: null,
+        },
       };
     });
   }
@@ -463,26 +588,84 @@ export function useSentenceBuilder() {
   }
   function advance(force: boolean) {
     clearTimeout(advTimer.current);
+    interruptAutoRead();
     update((s) => {
       const ses = s.session;
-      if (!ses || ses.summary || ses.empty) return null;
+      if (!ses || ses.summary || ses.empty || ses.review) return null;
       if (!force && ses.attempt && !ses.attempt.done) return null;
+      const at = ses.attempt;
+      const history = at
+        ? ses.history.concat([{ cardId: at.cardId, status: at.done ? ('completed' as const) : ('skipped' as const) }])
+        : ses.history;
       const next = ses.index + 1;
       if (next >= ses.queue.length) {
-        return { session: { ...ses, summary: true, attempt: null } };
+        return { session: { ...ses, history, summary: true, attempt: null } };
       }
       const card = s.cards.find((c) => c.id === ses.queue[next]);
       if (!card) {
-        return { session: { ...ses, summary: true, attempt: null } };
+        return { session: { ...ses, history, summary: true, attempt: null } };
       }
-      return { session: { ...ses, index: next, attempt: buildAttempt(card) } };
+      return { session: { ...ses, history, index: next, attempt: buildAttempt(card, s.settings.revealBlocksOnTap) } };
     });
+  }
+
+  // ---------------- review mode (Feature F) ----------------
+  function openReviewAt(s: State, pos: number): Patch {
+    const ses = s.session;
+    if (!ses || pos < 0 || pos >= ses.history.length) return null;
+    const entry = ses.history[pos];
+    const card = s.cards.find((c) => c.id === entry.cardId);
+    if (!card) return null;
+    // Entering an entry always builds fresh — partial review attempts are discarded.
+    const attempt = entry.status === 'completed' ? buildCompletedDisplay(card) : buildAttempt(card, s.settings.revealBlocksOnTap);
+    return { session: { ...ses, review: { pos, attempt } } };
+  }
+  function reviewBack() {
+    update((s) => {
+      const ses = s.session;
+      if (!ses || !ses.history.length || inCompletionTransition(ses)) return null;
+      const pos = ses.review ? ses.review.pos - 1 : ses.history.length - 1;
+      return openReviewAt(s, pos);
+    });
+  }
+  function reviewForward() {
+    update((s) => {
+      const ses = s.session;
+      if (!ses || !ses.review || inCompletionTransition(ses)) return null;
+      if (ses.review.pos >= ses.history.length - 1) {
+        return { session: { ...ses, review: null } };
+      }
+      return openReviewAt(s, ses.review.pos + 1);
+    });
+  }
+  /** "Current" / Next-in-review: jump straight back to the live card (or summary). */
+  function reviewReturn() {
+    clearTimeout(advTimer.current);
+    interruptAutoRead();
+    update((s) => (s.session?.review ? { session: { ...s.session, review: null } } : null));
+  }
+  /** Summary's "Review skipped (N)": opens review at the earliest skipped entry. */
+  function reviewSkipped() {
+    update((s) => {
+      const ses = s.session;
+      if (!ses) return null;
+      const pos = ses.history.findIndex((e) => e.status === 'skipped');
+      if (pos < 0) return null;
+      return openReviewAt(s, pos);
+    });
+  }
+  /** Writes the active attempt back into the session, whichever mode owns it. */
+  function withAttempt(ses: Session, attempt: Attempt): Session {
+    if (ses.review) return { ...ses, review: { ...ses.review, attempt } };
+    return { ...ses, attempt };
   }
   function tapBlock(k: string) {
     update((s) => {
       const ses = s.session;
-      if (!ses || !ses.attempt || ses.attempt.done) return null;
-      const at = ses.attempt;
+      if (!ses) return null;
+      const review = ses.review;
+      const at = review ? review.attempt : ses.attempt;
+      if (!at || at.done || at.covered) return null;
       const block = at.pool.find((x) => x.k === k && !x.gone);
       if (!block) return null;
       const expected = at.tokens[at.placed];
@@ -494,14 +677,28 @@ export function useSentenceBuilder() {
           const card = s.cards.find((c) => c.id === at.cardId);
           const completion = computeCompletion(card, at.mistakes);
           const attempt: Attempt = { ...at, placed, pool, done: true, doneInfo: completion };
-          clearTimeout(advTimer.current);
-          advTimer.current = setTimeout(() => advance(false), AUTO_ADVANCE_MS);
-          return {
-            cards: card ? s.cards.map((c) => (c.id === card.id ? { ...c, streak: completion.streak, masteredAt: completion.masteredAt } : c)) : s.cards,
-            session: { ...ses, attempt, completed: ses.completed + 1, newly: ses.newly + (completion.newly ? 1 : 0) },
+          scheduleCompletionAdvance(s.settings, card ? card.sentence : at.tokens.join(' '), !!review);
+          const cards = card
+            ? s.cards.map((c) => (c.id === card.id ? { ...c, streak: completion.streak, masteredAt: completion.masteredAt } : c))
+            : s.cards;
+          const counted = {
+            completed: ses.completed + 1,
+            newly: ses.newly + (completion.newly ? 1 : 0),
           };
+          if (review) {
+            return {
+              cards,
+              session: {
+                ...ses,
+                ...counted,
+                review: { ...review, attempt },
+                history: ses.history.map((e, i) => (i === review.pos ? { ...e, status: 'completed' as const } : e)),
+              },
+            };
+          }
+          return { cards, session: { ...ses, ...counted, attempt } };
         }
-        return { session: { ...ses, attempt: { ...at, placed, pool } } };
+        return { session: withAttempt(ses, { ...at, placed, pool }) };
       }
       if (navigator.vibrate) {
         try {
@@ -514,20 +711,20 @@ export function useSentenceBuilder() {
       shakeTimers.current[k] = setTimeout(() => {
         update((s2) => {
           const ses2 = s2.session;
-          if (!ses2 || !ses2.attempt) return null;
-          return { session: { ...ses2, attempt: { ...ses2.attempt, pool: ses2.attempt.pool.map((x) => (x.k === k ? { ...x, shake: false } : x)) } } };
+          if (!ses2) return null;
+          const at2 = ses2.review ? ses2.review.attempt : ses2.attempt;
+          if (!at2) return null;
+          return { session: withAttempt(ses2, { ...at2, pool: at2.pool.map((x) => (x.k === k ? { ...x, shake: false } : x)) }) };
         });
       }, 430);
       return {
-        session: {
-          ...ses,
-          attempt: { ...at, mistakes: at.mistakes + 1, pool: at.pool.map((x) => (x.k === k ? { ...x, shake: true } : x)) },
-        },
+        session: withAttempt(ses, { ...at, mistakes: at.mistakes + 1, pool: at.pool.map((x) => (x.k === k ? { ...x, shake: true } : x)) }),
       };
     });
   }
   function exitPractice() {
     clearTimeout(advTimer.current);
+    interruptAutoRead();
     cancelSpeech();
     update({ screen: 'home', session: null });
   }
@@ -559,11 +756,19 @@ export function useSentenceBuilder() {
       bulkImport,
       toggleTts,
       setTtsLang,
+      toggleAutoRead,
+      toggleHideTransliteration,
+      toggleRevealBlocks,
+      revealBlocks,
       speakBlock,
       startSession,
       resetAndRestart,
       advance,
       tapBlock,
+      reviewBack,
+      reviewForward,
+      reviewReturn,
+      reviewSkipped,
       exitPractice,
     },
   };

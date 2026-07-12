@@ -101,6 +101,28 @@ export function ErrorIcon({ size = 12, color = '#C4423C', className }: IconProps
   );
 }
 
+export function ForwardIcon({ size = 20, color = 'currentColor', className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M9.5 5.5 L16 12 L9.5 18.5" stroke={color} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function GearIcon({ size = 19, color = 'currentColor', className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="3.4" stroke={color} strokeWidth="2" />
+      <path
+        d="M12 2.9v2.6 M12 18.5v2.6 M2.9 12h2.6 M18.5 12h2.6 M5.6 5.6l1.85 1.85 M16.55 16.55l1.85 1.85 M18.4 5.6l-1.85 1.85 M7.45 16.55L5.6 18.4"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function SpeakerIcon({ size = 16, color = '#6B7590', big = false }: IconProps & { big?: boolean }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
